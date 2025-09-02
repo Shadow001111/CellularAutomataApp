@@ -6,7 +6,7 @@
 #include "VAO.h"
 #include "VBO.h"
 #include "EBO.h"
-#include <random> // For random number generation
+#include "Simulation.h"
 
 const int GRID_W = 128;
 const int GRID_H = 128;
@@ -88,25 +88,9 @@ int main()
     if (!window)
         return -1;
 
-    // Create two 2D textures using Texture2D class
+    // Create two 2D textures
     Texture2D textureA(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
     Texture2D textureB(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
-
-    // Fill both textures with random values between 0 and 1
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, 1);
-
-    std::vector<uint8_t> dataA(GRID_W * GRID_H);
-    std::vector<uint8_t> dataB(GRID_W * GRID_H);
-    for (int i = 0; i < GRID_W * GRID_H; ++i)
-    {
-        dataA[i] = static_cast<uint8_t>(dis(gen));
-        dataB[i] = static_cast<uint8_t>(dis(gen));
-    }
-
-    textureA.setData(dataA.data());
-    textureB.setData(dataB.data());
 
     // Load shaders using Shader class
     std::vector<Shader::ShaderSource> sources = {
@@ -136,6 +120,10 @@ int main()
     double lastSwitchTime = glfwGetTime();
     bool useTextureA = true;
 
+    // Simulation class instance
+	Simulation simulation(GRID_W, GRID_H, textureA, textureB);
+    simulation.randomize(useTextureA);
+
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -148,6 +136,7 @@ int main()
         double currentTime = glfwGetTime();
         if (currentTime - lastSwitchTime >= 1.0 / SIMULATION_UPDATE_RATE)
         {
+            simulation.update(useTextureA);
             useTextureA = !useTextureA;
             lastSwitchTime = currentTime;
         }
