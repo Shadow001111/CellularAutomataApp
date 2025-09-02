@@ -42,7 +42,7 @@ void Texture2D::bind(GLenum textureUnit) const
 }
 
 // Update texture data from user buffer
-void Texture2D::update(const void* data)
+void Texture2D::setData(const void* data)
 {
     glBindTexture(GL_TEXTURE_2D, textureID);
     glTexSubImage2D(

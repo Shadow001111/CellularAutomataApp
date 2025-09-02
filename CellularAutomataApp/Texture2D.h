@@ -22,7 +22,7 @@ public:
     void bind(GLenum textureUnit = GL_TEXTURE0) const;
 
     // Update texture data from user buffer
-    void update(const void* data);
+    void setData(const void* data);
 
     // Set texture filtering and wrapping parameters
     void setFilter(GLenum minFilter, GLenum magFilter);

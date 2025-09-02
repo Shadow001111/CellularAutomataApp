@@ -6,6 +6,7 @@
 #include "VAO.h"
 #include "VBO.h"
 #include "EBO.h"
+#include <random> // For random number generation
 
 const int GRID_W = 128;
 const int GRID_H = 128;
@@ -84,8 +85,27 @@ int main()
     if (!window)
         return -1;
 
-    // Create 2D texture using Texture2D class
-    Texture2D texture(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
+    // Create two 2D textures using Texture2D class
+    Texture2D textureA(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
+    Texture2D textureB(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
+
+    // Fill both textures with random values between 0 and 1
+    // Комментарий: Fill texture data arrays with random 0 or 1 values
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, 1);
+
+    std::vector<uint8_t> dataA(GRID_W * GRID_H);
+    std::vector<uint8_t> dataB(GRID_W * GRID_H);
+    for (int i = 0; i < GRID_W * GRID_H; ++i)
+    {
+        dataA[i] = static_cast<uint8_t>(dis(gen));
+        dataB[i] = static_cast<uint8_t>(dis(gen));
+    }
+
+    // Комментарий: Upload random data to textures
+    textureA.setData(dataA.data());
+    textureB.setData(dataB.data());
 
     // Load shaders using Shader class
     std::vector<Shader::ShaderSource> sources = {
@@ -111,6 +131,8 @@ int main()
     // Create and configure quad buffers
     createQuadBuffers(vao, vbo, ebo, vertices, sizeof(vertices), indices, sizeof(indices));
 
+    int frameCount = 0; // Frames counter
+
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -118,7 +140,16 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         shader.use();
-        texture.bind(GL_TEXTURE0);
+
+        // Alternate between textureA and textureB every frame
+        if ((frameCount % 2) == 0)
+        {
+            textureA.bind(GL_TEXTURE0);
+        }
+        else
+        {
+            textureB.bind(GL_TEXTURE0);
+        }
         shader.setInt("uTexture", 0);
 
         vao.bind();
@@ -126,6 +157,8 @@ int main()
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        frameCount++;
     }
 
     // Destructors will delete the textures and buffers
