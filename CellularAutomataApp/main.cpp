@@ -2,6 +2,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "Shader.h"
+#include "Texture2D.h"
 #include <random>
 
 const int GRID_W = 128;
@@ -50,62 +51,14 @@ GLFWwindow* initOpenGLWindow(int width, int height, const char* title)
     return window;
 }
 
-// Update texture data with random 0 or 1 values
-void updateTextureRandom(GLuint textureID, int width, int height)
-{
-    // Create random generator
-    static std::mt19937 rng(std::random_device{}());
-    static std::uniform_int_distribution<int> dist(0, 1);
-
-    // Allocate buffer for texture data
-    std::vector<unsigned char> data(width * height);
-
-    // Fill buffer with random 0 or 1
-    for (int i = 0; i < width * height; ++i)
-        data[i] = static_cast<unsigned char>(dist(rng));
-
-    // Update texture data
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexSubImage2D(
-        GL_TEXTURE_2D,
-        0,
-        0, 0,
-        width, height,
-        GL_RED_INTEGER,
-        GL_UNSIGNED_BYTE,
-        data.data()
-    );
-}
-
 int main()
 {
     GLFWwindow* window = initOpenGLWindow(1920, 1080, "OpenGL 4.6 Window");
     if (!window)
         return -1;
 
-    // Create 2D texture
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    // Allocate storage for the texture
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        GL_R8UI,           // Internal format: 8-bit unsigned integer, use only 0 or 1
-        GRID_W,
-        GRID_H,
-        0,
-        GL_RED_INTEGER,    // Format for integer textures
-        GL_UNSIGNED_BYTE,  // Type
-        nullptr            // No initial data
-    );
-
-    // Set texture parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // Create 2D texture using Texture2D class
+    Texture2D texture(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
 
     // Load shaders using Shader class
     std::vector<Shader::ShaderSource> sources = {
@@ -146,20 +99,16 @@ int main()
 
     glBindVertexArray(0);
 
-    // Initial texture update
-    updateTextureRandom(textureID, GRID_W, GRID_H);
-
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
-        updateTextureRandom(textureID, GRID_W, GRID_H);
+        texture.updateRandom();
 
-        glClearColor(0.9f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         shader.use();
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textureID);
+        texture.bind(GL_TEXTURE0);
         shader.setInt("uTexture", 0);
 
         glBindVertexArray(VAO);
@@ -172,7 +121,7 @@ int main()
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
-    glDeleteTextures(1, &textureID);
+    // Texture2D destructor will delete the texture
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
