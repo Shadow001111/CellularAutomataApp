@@ -79,6 +79,9 @@ void createQuadBuffers(VAO& vao, VBO& vbo, EBO& ebo, const float* vertices, size
     vao.unbind();
 }
 
+
+const double SIMULATION_UPDATE_RATE = 2.0;
+
 int main()
 {
     GLFWwindow* window = initOpenGLWindow(1920, 1080, "OpenGL 4.6 Window");
@@ -90,7 +93,6 @@ int main()
     Texture2D textureB(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
 
     // Fill both textures with random values between 0 and 1
-    // Комментарий: Fill texture data arrays with random 0 or 1 values
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, 1);
@@ -103,7 +105,6 @@ int main()
         dataB[i] = static_cast<uint8_t>(dis(gen));
     }
 
-    // Комментарий: Upload random data to textures
     textureA.setData(dataA.data());
     textureB.setData(dataB.data());
 
@@ -131,7 +132,9 @@ int main()
     // Create and configure quad buffers
     createQuadBuffers(vao, vbo, ebo, vertices, sizeof(vertices), indices, sizeof(indices));
 
-    int frameCount = 0; // Frames counter
+    // Timing variables for texture switching
+    double lastSwitchTime = glfwGetTime();
+    bool useTextureA = true;
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -141,8 +144,15 @@ int main()
 
         shader.use();
 
-        // Alternate between textureA and textureB every frame
-        if ((frameCount % 2) == 0)
+        // Switch texture every 1/SIMULATION_UPDATE_RATE seconds
+        double currentTime = glfwGetTime();
+        if (currentTime - lastSwitchTime >= 1.0 / SIMULATION_UPDATE_RATE)
+        {
+            useTextureA = !useTextureA;
+            lastSwitchTime = currentTime;
+        }
+
+        if (useTextureA)
         {
             textureA.bind(GL_TEXTURE0);
         }
@@ -157,8 +167,6 @@ int main()
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-
-        frameCount++;
     }
 
     // Destructors will delete the textures and buffers
