@@ -8,8 +8,8 @@
 #include "EBO.h"
 #include "Simulation.h"
 
-const int GRID_W = 128;
-const int GRID_H = 128;
+const int GRID_W = 512;
+const int GRID_H = 512;
 
 GLFWwindow* initOpenGLWindow(int width, int height, const char* title)
 {
@@ -80,11 +80,11 @@ void createQuadBuffers(VAO& vao, VBO& vbo, EBO& ebo, const float* vertices, size
 }
 
 
-const double SIMULATION_UPDATE_RATE = 120.0;
+const double SIMULATION_UPDATE_RATE = 1000.0;
 
 int main()
 {
-    GLFWwindow* window = initOpenGLWindow(1920, 1080, "OpenGL 4.6 Window");
+    GLFWwindow* window = initOpenGLWindow(1024, 1024, "Cellular automata");
     if (!window)
         return -1;
 
@@ -117,28 +117,50 @@ int main()
     createQuadBuffers(vao, vbo, ebo, vertices, sizeof(vertices), indices, sizeof(indices));
 
     // Timing variables for texture switching
-    double lastSwitchTime = glfwGetTime();
+	double textureSwitchCounter = 0.0;
     bool useTextureA = true;
 
     // Simulation class instance
 	Simulation simulation(GRID_W, GRID_H, textureA, textureB);
     simulation.randomize(useTextureA);
 
+    double previousTime = glfwGetTime();
+    double fpsUpdateTime = previousTime;
+    int frameCount = 0;
+    double fps = 0.0;
+
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
+        double currentTime = glfwGetTime();
+        double deltaTime = currentTime - previousTime;
+        previousTime = currentTime;
+
+        frameCount++;
+		// Update FPS every 0.5 seconds for stability
+        if (currentTime - fpsUpdateTime >= 0.5)
+        {
+            fps = frameCount / (currentTime - fpsUpdateTime);
+            fpsUpdateTime = currentTime;
+            frameCount = 0;
+
+            char title[64];
+            snprintf(title, sizeof(title), "Cellular automata - FPS: %.1f", fps);
+            glfwSetWindowTitle(window, title);
+        }
+
+        // Clear screen
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        quadRendererShader.use();
-
         // Switch texture every 1/SIMULATION_UPDATE_RATE seconds
-        double currentTime = glfwGetTime();
-        if (currentTime - lastSwitchTime >= 1.0 / SIMULATION_UPDATE_RATE)
+		// Note: If SIMULATION_UPDATE_RATE is going to be dynamic, when increasing it, set textureSwitchCounter to 0.
+		textureSwitchCounter += deltaTime;
+        while (textureSwitchCounter >= 1.0 / SIMULATION_UPDATE_RATE)
         {
             simulation.update(useTextureA);
             useTextureA = !useTextureA;
-            lastSwitchTime = currentTime;
+			textureSwitchCounter -= 1.0 / SIMULATION_UPDATE_RATE;
         }
 
         if (useTextureA)
@@ -149,6 +171,8 @@ int main()
         {
             textureB.bind(GL_TEXTURE0);
         }
+
+        quadRendererShader.use();
         quadRendererShader.setInt("uTexture", 0);
 
         vao.bind();
