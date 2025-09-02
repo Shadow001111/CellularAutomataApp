@@ -3,7 +3,9 @@
 #include <GLFW/glfw3.h>
 #include "Shader.h"
 #include "Texture2D.h"
-#include <random>
+#include "VAO.h"
+#include "VBO.h"
+#include "EBO.h"
 
 const int GRID_W = 128;
 const int GRID_H = 128;
@@ -51,6 +53,31 @@ GLFWwindow* initOpenGLWindow(int width, int height, const char* title)
     return window;
 }
 
+void createQuadBuffers(VAO& vao, VBO& vbo, EBO& ebo, const float* vertices, size_t verticesSize, const unsigned int* indices, size_t indicesSize)
+{
+    // Bind VAO
+    vao.bind();
+
+    // Bind and fill VBO
+    vbo.bind();
+    vbo.setData(vertices, verticesSize);
+
+    // Bind and fill EBO
+    ebo.bind();
+    ebo.setData(indices, indicesSize);
+
+    // Configure vertex attributes
+    // Position attribute
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // TexCoord attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    // Unbind VAO
+    vao.unbind();
+}
+
 int main()
 {
     GLFWwindow* window = initOpenGLWindow(1920, 1080, "OpenGL 4.6 Window");
@@ -77,27 +104,12 @@ int main()
     };
     unsigned int indices[] = { 0, 1, 2, 2, 3, 0 };
 
-    GLuint VAO, VBO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    VAO vao;
+    VBO vbo;
+    EBO ebo;
 
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // Position attribute
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // TexCoord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
+    // Create and configure quad buffers
+    createQuadBuffers(vao, vbo, ebo, vertices, sizeof(vertices), indices, sizeof(indices));
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -111,17 +123,14 @@ int main()
         texture.bind(GL_TEXTURE0);
         shader.setInt("uTexture", 0);
 
-        glBindVertexArray(VAO);
+        vao.bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-    // Texture2D destructor will delete the texture
+    // Destructors will delete the textures and buffers
     glfwDestroyWindow(window);
     glfwTerminate();
     return 0;
