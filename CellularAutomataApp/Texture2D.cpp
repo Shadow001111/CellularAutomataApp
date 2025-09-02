@@ -89,3 +89,8 @@ int Texture2D::getHeight() const
 {
     return height;
 }
+
+GLenum Texture2D::getInternalFormat() const
+{
+    return internalFormat;
+}

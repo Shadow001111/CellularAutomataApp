@@ -80,7 +80,7 @@ void createQuadBuffers(VAO& vao, VBO& vbo, EBO& ebo, const float* vertices, size
 }
 
 
-const double SIMULATION_UPDATE_RATE = 2.0;
+const double SIMULATION_UPDATE_RATE = 120.0;
 
 int main()
 {
@@ -93,11 +93,11 @@ int main()
     Texture2D textureB(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
 
     // Load shaders using Shader class
-    std::vector<Shader::ShaderSource> sources = {
+    std::vector<Shader::ShaderSource> quadRendererShaderSources = {
         { GL_VERTEX_SHADER,   "Shaders/texture.vert" },
         { GL_FRAGMENT_SHADER, "Shaders/texture.frag" }
     };
-    Shader shader(sources);
+    Shader quadRendererShader(quadRendererShaderSources);
 
     // Fullscreen quad vertices and indices
     float vertices[] = {
@@ -130,7 +130,7 @@ int main()
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        shader.use();
+        quadRendererShader.use();
 
         // Switch texture every 1/SIMULATION_UPDATE_RATE seconds
         double currentTime = glfwGetTime();
@@ -149,7 +149,7 @@ int main()
         {
             textureB.bind(GL_TEXTURE0);
         }
-        shader.setInt("uTexture", 0);
+        quadRendererShader.setInt("uTexture", 0);
 
         vao.bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

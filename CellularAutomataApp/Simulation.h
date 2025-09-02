@@ -1,7 +1,9 @@
 #pragma once
 #include "Texture2D.h"
+#include "Shader.h"
 #include <random>
 #include <vector>
+#include <memory> // For std::unique_ptr
 
 class Simulation
 {
@@ -18,4 +20,6 @@ private:
     std::random_device rd;
     std::mt19937 gen;
     std::uniform_int_distribution<> dis;
+
+    std::unique_ptr<Shader> computeShader;
 };

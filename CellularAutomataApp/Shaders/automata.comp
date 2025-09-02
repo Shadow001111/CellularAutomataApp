@@ -1,0 +1,54 @@
+#version 460 core
+
+layout(local_size_x = 1, local_size_y = 1) in;
+
+layout(r8ui, binding = 0) readonly uniform uimage2D currentWorld;
+layout(r8ui, binding = 1) writeonly uniform uimage2D nextWorld;
+
+uniform int gridWidth;
+uniform int gridHeight;
+
+uint countNeighbours(ivec2 pos)
+{
+    uint count = 0;
+    for (int y = -1; y <= 1; y++)
+    {
+        for (int x = -1; x <= 1; x++)
+        {
+            if (x == 0 && y == 0) continue; // skip self
+            ivec2 neighborPos = pos + ivec2(x, y);
+            // Wrap around edges
+            neighborPos = ivec2((neighborPos.x + gridWidth) % gridWidth, (neighborPos.y + gridHeight) % gridHeight);
+            count += imageLoad(currentWorld, neighborPos).r;
+        }
+    }
+    return count;
+}
+
+void main() {
+    ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
+    uint cell = imageLoad(currentWorld, pos).r;
+
+    uint nextCell = 0;
+
+    uint neighbours = countNeighbours(pos);
+
+    if (cell == 1)
+    {
+        // Any live cell with two or three live neighbours survives.
+        if (neighbours == 2 || neighbours == 3)
+        {
+            nextCell = 1;
+        }
+    }
+    else
+    {
+        // Any dead cell with exactly three live neighbours becomes a live cell.
+        if (neighbours == 3)
+        {
+            nextCell = 1;
+        }
+    }
+
+    imageStore(nextWorld, pos, uvec4(nextCell, 0, 0, 0));
+}

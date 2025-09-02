@@ -28,20 +28,19 @@ public:
     void setFilter(GLenum minFilter, GLenum magFilter);
     void setWrap(GLenum wrapS, GLenum wrapT);
 
-    // Get OpenGL texture ID
     GLuint getID() const;
 
-    // Get texture width
     int getWidth() const;
 
-    // Get texture height
     int getHeight() const;
+
+    GLenum getInternalFormat() const;
 
 private:
     GLuint textureID;
-    int width;
-    int height;
-    GLenum internalFormat;
-    GLenum format;
-    GLenum type;
+    const int width;
+    const int height;
+    const GLenum internalFormat;
+    const GLenum format;
+    const GLenum type;
 };
