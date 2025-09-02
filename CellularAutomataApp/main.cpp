@@ -114,8 +114,6 @@ int main()
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
-        texture.updateRandom();
-
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 

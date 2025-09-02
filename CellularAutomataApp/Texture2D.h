@@ -21,9 +21,6 @@ public:
     // Bind the texture to a texture unit
     void bind(GLenum textureUnit = GL_TEXTURE0) const;
 
-    // Update texture data with random 0 or 1 values
-    void updateRandom();
-
     // Update texture data from user buffer
     void update(const void* data);
 

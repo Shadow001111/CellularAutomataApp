@@ -41,29 +41,6 @@ void Texture2D::bind(GLenum textureUnit) const
     glBindTexture(GL_TEXTURE_2D, textureID);
 }
 
-// Update texture data with random 0 or 1 values
-void Texture2D::updateRandom()
-{
-    static std::mt19937 rng(std::random_device{}());
-    static std::uniform_int_distribution<int> dist(0, 1);
-
-    std::vector<unsigned char> data(width * height);
-
-    for (int i = 0; i < width * height; ++i)
-        data[i] = static_cast<unsigned char>(dist(rng));
-
-    glBindTexture(GL_TEXTURE_2D, textureID);
-    glTexSubImage2D(
-        GL_TEXTURE_2D,
-        0,
-        0, 0,
-        width, height,
-        format,
-        type,
-        data.data()
-    );
-}
-
 // Update texture data from user buffer
 void Texture2D::update(const void* data)
 {
