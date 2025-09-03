@@ -8,6 +8,9 @@ layout(r8ui, binding = 1) writeonly uniform uimage2D nextWorld;
 uniform int gridWidth;
 uniform int gridHeight;
 
+const uvec2 stableRange = uvec2(2, 3);
+const uvec2 birthRange = uvec2(3, 3);
+
 uint countNeighbours(ivec2 pos)
 {
     uint count = 0;
@@ -29,25 +32,16 @@ void main() {
     ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
     uint cell = imageLoad(currentWorld, pos).r;
 
-    uint nextCell = 0;
-
     uint neighbours = countNeighbours(pos);
 
-    if (cell == 1)
+    uint nextCell = 0;
+    if (neighbours >= birthRange.x && neighbours <= birthRange.y)
     {
-        // Any live cell with two or three live neighbours survives.
-        if (neighbours == 2 || neighbours == 3)
-        {
-            nextCell = 1;
-        }
+        nextCell = 1;
     }
-    else
+    else if (neighbours >= stableRange.x && neighbours <= stableRange.y)
     {
-        // Any dead cell with exactly three live neighbours becomes a live cell.
-        if (neighbours == 3)
-        {
-            nextCell = 1;
-        }
+        nextCell = cell;
     }
 
     imageStore(nextWorld, pos, uvec4(nextCell, 0, 0, 0));
