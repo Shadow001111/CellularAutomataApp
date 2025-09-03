@@ -127,9 +127,9 @@ int main()
     simulation.randomize(useTextureA);
 
     double previousTime = glfwGetTime();
-    double fpsUpdateTime = previousTime;
+    double uiUpdateTime = previousTime;
     int frameCount = 0;
-    double fps = 0.0;
+    int updatesCount = 0;
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -139,23 +139,27 @@ int main()
         if (deltaTime > 0.5)
         {
             deltaTime = 0.0;
-            fpsUpdateTime = currentTime;
+            uiUpdateTime = currentTime;
             frameCount = 0;
+			updatesCount = 0;
         }
         previousTime = currentTime;
 
 		// Update FPS every 0.5 seconds for stability
-        frameCount++;
-        if (currentTime - fpsUpdateTime >= 0.5)
+        if (currentTime - uiUpdateTime >= 0.5)
         {
-            fps = frameCount / (currentTime - fpsUpdateTime);
-            fpsUpdateTime = currentTime;
+            double fps = frameCount / (currentTime - uiUpdateTime);
+			double ups = updatesCount / (currentTime - uiUpdateTime);
+
+            uiUpdateTime = currentTime;
             frameCount = 0;
+			updatesCount = 0;
 
             char title[64];
-            snprintf(title, sizeof(title), "Cellular automata - FPS: %.1f", fps);
+            snprintf(title, sizeof(title), "Cellular automata - FPS: %.1f - UPS: %.1f", fps, ups);
             glfwSetWindowTitle(window, title);
         }
+        frameCount++;
 
         // Switch texture every 1/SIMULATION_UPDATE_RATE seconds
 		// Note: If SIMULATION_UPDATE_RATE is going to be dynamic, when increasing it, set textureSwitchCounter to 0.
@@ -165,6 +169,7 @@ int main()
             simulation.update(useTextureA);
             useTextureA = !useTextureA;
 			textureSwitchCounter -= 1.0 / SIMULATION_UPDATE_RATE;
+			updatesCount++;
         }
 
         if (useTextureA)
