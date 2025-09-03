@@ -88,6 +88,8 @@ int main()
     if (!window)
         return -1;
 
+	glfwSwapInterval(1); // Enable vsync
+
     // Create two 2D textures
     Texture2D textureA(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
     Texture2D textureB(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
@@ -134,6 +136,12 @@ int main()
     {
         double currentTime = glfwGetTime();
         double deltaTime = currentTime - previousTime;
+        if (deltaTime > 0.5)
+        {
+            deltaTime = 0.0;
+            fpsUpdateTime = currentTime;
+            frameCount = 0;
+        }
         previousTime = currentTime;
 
 		// Update FPS every 0.5 seconds for stability
@@ -148,10 +156,6 @@ int main()
             snprintf(title, sizeof(title), "Cellular automata - FPS: %.1f", fps);
             glfwSetWindowTitle(window, title);
         }
-
-        // Clear screen
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
 
         // Switch texture every 1/SIMULATION_UPDATE_RATE seconds
 		// Note: If SIMULATION_UPDATE_RATE is going to be dynamic, when increasing it, set textureSwitchCounter to 0.
