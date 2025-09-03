@@ -1,5 +1,9 @@
 #include "Simulation.h"
 #include <glad/glad.h>
+#include <math.h>
+
+const int WORK_GROUP_W = 8;
+const int WORK_GROUP_H = 8;
 
 Simulation::Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB)
     : gridW(gridW), gridH(gridH), textureA(texA), textureB(texB), gen(rd()), dis(0, 1)
@@ -38,6 +42,8 @@ void Simulation::update(bool useTextureA)
     computeShader->setInt("gridHeight", gridH);
 
     // Run compute shader
-    glDispatchCompute((GLuint)gridW, (GLuint)gridH, 1);
+	int groupsX = ceilf(gridW / WORK_GROUP_W);
+	int groupsY = ceilf(gridH / WORK_GROUP_H);
+    glDispatchCompute((GLuint)groupsX, (GLuint)groupsY, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }

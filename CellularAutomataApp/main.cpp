@@ -80,7 +80,7 @@ void createQuadBuffers(VAO& vao, VBO& vbo, EBO& ebo, const float* vertices, size
 }
 
 
-const double SIMULATION_UPDATE_RATE = 1000.0;
+const double SIMULATION_UPDATE_RATE = 15000.0;
 
 int main()
 {
@@ -136,8 +136,8 @@ int main()
         double deltaTime = currentTime - previousTime;
         previousTime = currentTime;
 
-        frameCount++;
 		// Update FPS every 0.5 seconds for stability
+        frameCount++;
         if (currentTime - fpsUpdateTime >= 0.5)
         {
             fps = frameCount / (currentTime - fpsUpdateTime);
