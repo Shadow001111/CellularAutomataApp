@@ -80,7 +80,7 @@ void createQuadBuffers(VAO& vao, VBO& vbo, EBO& ebo, const float* vertices, size
 }
 
 
-const double SIMULATION_UPDATE_RATE = 15000.0;
+const double SIMULATION_UPDATE_RATE = 18000.0;
 
 int main()
 {
@@ -91,6 +91,8 @@ int main()
 	glfwSwapInterval(1); // Enable vsync
 
     // Create two 2D textures
+	// TODO: Try using Texture2DArray to not bind different textures every frame
+	// TODO: Or try to use uniform index to switch between textures in the shader
     Texture2D textureA(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
     Texture2D textureB(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
 

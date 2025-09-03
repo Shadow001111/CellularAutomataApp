@@ -12,6 +12,9 @@ Simulation::Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB)
         { GL_COMPUTE_SHADER, "Shaders/automata.comp" }
     };
     computeShader = std::make_unique<Shader>(sources);
+    computeShader->use();
+    computeShader->setInt("gridWidth", gridW);
+    computeShader->setInt("gridHeight", gridH);
 }
 
 void Simulation::randomize(bool useTextureA)
@@ -37,13 +40,9 @@ void Simulation::update(bool useTextureA)
     glBindImageTexture(0, currentWorld.getID(), 0, GL_FALSE, 0, GL_READ_ONLY, currentWorld.getInternalFormat());
     glBindImageTexture(1, nextWorld.getID(), 0, GL_FALSE, 0, GL_WRITE_ONLY, nextWorld.getInternalFormat());
 
-    // Send grid size using uniform
-    computeShader->setInt("gridWidth", gridW);
-    computeShader->setInt("gridHeight", gridH);
-
     // Run compute shader
-	int groupsX = ceilf(gridW / WORK_GROUP_W);
-	int groupsY = ceilf(gridH / WORK_GROUP_H);
-    glDispatchCompute((GLuint)groupsX, (GLuint)groupsY, 1);
+    GLuint groupsX = ceilf(gridW / WORK_GROUP_W);
+    GLuint groupsY = ceilf(gridH / WORK_GROUP_H);
+    glDispatchCompute(groupsX, groupsY, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
