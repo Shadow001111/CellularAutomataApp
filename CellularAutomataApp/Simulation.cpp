@@ -31,19 +31,28 @@ void Simulation::randomize(bool useTextureA)
     currentTexture.setData(data.data());
 }
 
-void Simulation::update(bool useTextureA)
+void Simulation::update(int updates, bool& useTextureA)
 {
-    const auto& currentWorld = useTextureA ? textureA : textureB;
-    const auto& nextWorld = useTextureA ? textureB : textureA;
-
-	// Use compute shader for calculating next world state
+    // Use compute shader for calculating next world state
     computeShader->use();
 
-    // Bind textures to image units
-    glBindImageTexture(0, currentWorld.getID(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R8UI);
-    glBindImageTexture(1, nextWorld.getID(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
+    GLuint aID = textureA.getID();
+    GLuint bID = textureB.getID();
 
-    // Run compute shader
-    glDispatchCompute(groupsX, groupsY, 1);
-    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    for (int i = 0; i < updates; i++)
+    {
+		GLuint currentID = useTextureA ? aID : bID;
+		GLuint nextID = useTextureA ? bID : aID;
+
+        // Bind textures to image units
+        glBindImageTexture(0, currentID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R8UI);
+        glBindImageTexture(1, nextID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
+
+        // Run compute shader
+        glDispatchCompute(groupsX, groupsY, 1);
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+        // Switch textures
+        useTextureA = !useTextureA;
+    }
 }

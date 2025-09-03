@@ -165,13 +165,16 @@ int main()
 
         // Switch texture every 1/SIMULATION_UPDATE_RATE seconds
 		// Note: If SIMULATION_UPDATE_RATE is going to be dynamic, when increasing it, set textureSwitchCounter to 0.
-		textureSwitchCounter += deltaTime;
-        while (textureSwitchCounter >= 1.0 / SIMULATION_UPDATE_RATE)
         {
-            simulation.update(useTextureA);
-            useTextureA = !useTextureA;
-			textureSwitchCounter -= 1.0 / SIMULATION_UPDATE_RATE;
-			updatesCount++;
+            textureSwitchCounter += deltaTime;
+			double updateInterval = 1.0 / SIMULATION_UPDATE_RATE;
+            int updatesToPerform = static_cast<int>(textureSwitchCounter * SIMULATION_UPDATE_RATE);
+            if (updatesToPerform > 0)
+            {
+                simulation.update(updatesToPerform, useTextureA);
+                textureSwitchCounter -= updatesToPerform * updateInterval;
+                updatesCount += updatesToPerform;
+            }
         }
 
         if (useTextureA)

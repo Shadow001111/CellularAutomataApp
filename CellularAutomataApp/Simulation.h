@@ -22,5 +22,5 @@ class Simulation
 public:
     Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB);
     void randomize(bool useTextureA);
-    void update(bool useTextureA);
+    void update(int updates, bool& useTextureA);
 };
