@@ -1,30 +1,41 @@
 #include "VAO.h"
 
-// Constructor: creates VAO
 VAO::VAO()
 {
     glGenVertexArrays(1, &id);
 }
 
-// Destructor: deletes VAO
 VAO::~VAO()
 {
     glDeleteVertexArrays(1, &id);
 }
 
-// Bind VAO
+VAO::VAO(VAO&& other) noexcept : id(other.id)
+{
+	other.id = 0;
+}
+
+VAO& VAO::operator=(VAO&& other) noexcept
+{
+    if (this != &other)
+    {
+        glDeleteVertexArrays(1, &id);
+        id = other.id;
+        other.id = 0;
+    }
+	return *this;
+}
+
 void VAO::bind() const
 {
     glBindVertexArray(id);
 }
 
-// Unbind VAO
 void VAO::unbind() const
 {
     glBindVertexArray(0);
 }
 
-// Get VAO ID
 GLuint VAO::getID() const
 {
     return id;

@@ -1,37 +1,48 @@
 #include "EBO.h"
 
-// Constructor: creates EBO
 EBO::EBO()
 {
     glGenBuffers(1, &id);
 }
 
-// Destructor: deletes EBO
 EBO::~EBO()
 {
     glDeleteBuffers(1, &id);
 }
 
-// Bind EBO
+EBO::EBO(EBO&& other) noexcept : id(other.id)
+{
+    id = other.id;
+    other.id = 0;
+}
+
+EBO& EBO::operator=(EBO&& other) noexcept
+{
+    if (this != &other)
+    {
+        glDeleteBuffers(1, &id);
+        id = other.id;
+        other.id = 0;
+    }
+    return *this;
+}
+
 void EBO::bind() const
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
 }
 
-// Unbind EBO
 void EBO::unbind() const
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-// Upload data to EBO
 void EBO::setData(const void* data, GLsizeiptr size, GLenum usage)
 {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, usage);
 }
 
-// Get EBO ID
 GLuint EBO::getID() const
 {
     return id;
