@@ -40,8 +40,8 @@ void Simulation::update(bool useTextureA)
     computeShader->use();
 
     // Bind textures to image units
-    glBindImageTexture(0, currentWorld.getID(), 0, GL_FALSE, 0, GL_READ_ONLY, currentWorld.getInternalFormat());
-    glBindImageTexture(1, nextWorld.getID(), 0, GL_FALSE, 0, GL_WRITE_ONLY, nextWorld.getInternalFormat());
+    glBindImageTexture(0, currentWorld.getID(), 0, GL_FALSE, 0, GL_READ_ONLY, GL_R8UI);
+    glBindImageTexture(1, nextWorld.getID(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R8UI);
 
     // Run compute shader
     glDispatchCompute(groupsX, groupsY, 1);
