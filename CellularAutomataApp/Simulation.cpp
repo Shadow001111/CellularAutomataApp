@@ -15,6 +15,9 @@ Simulation::Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB)
     computeShader->use();
     computeShader->setInt("gridWidth", gridW);
     computeShader->setInt("gridHeight", gridH);
+
+    groupsX = ceilf((float)gridW / (float)WORK_GROUP_W);
+    groupsY = ceilf((float)gridH / (float)WORK_GROUP_H);
 }
 
 void Simulation::randomize(bool useTextureA)
@@ -41,8 +44,6 @@ void Simulation::update(bool useTextureA)
     glBindImageTexture(1, nextWorld.getID(), 0, GL_FALSE, 0, GL_WRITE_ONLY, nextWorld.getInternalFormat());
 
     // Run compute shader
-    GLuint groupsX = ceilf(gridW / WORK_GROUP_W);
-    GLuint groupsY = ceilf(gridH / WORK_GROUP_H);
     glDispatchCompute(groupsX, groupsY, 1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
