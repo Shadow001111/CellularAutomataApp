@@ -80,7 +80,7 @@ void createQuadBuffers(VAO& vao, VBO& vbo, EBO& ebo, const float* vertices, size
 }
 
 
-const double SIMULATION_UPDATE_RATE = 18000.0;
+const double SIMULATION_UPDATE_RATE = 50.0;
 
 int main()
 {
@@ -167,11 +167,11 @@ int main()
 		// Note: If SIMULATION_UPDATE_RATE is going to be dynamic, when increasing it, set textureSwitchCounter to 0.
         {
             textureSwitchCounter += deltaTime;
-			double updateInterval = 1.0 / SIMULATION_UPDATE_RATE;
             int updatesToPerform = static_cast<int>(textureSwitchCounter * SIMULATION_UPDATE_RATE);
             if (updatesToPerform > 0)
             {
                 simulation.update(updatesToPerform, useTextureA);
+                double updateInterval = 1.0 / SIMULATION_UPDATE_RATE;
                 textureSwitchCounter -= updatesToPerform * updateInterval;
                 updatesCount += updatesToPerform;
             }
@@ -187,7 +187,6 @@ int main()
         }
 
         quadRendererShader.use();
-        quadRendererShader.setInt("uTexture", 0);
 
         vao.bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

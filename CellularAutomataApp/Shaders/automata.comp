@@ -8,15 +8,21 @@ layout(r8ui, binding = 1) writeonly uniform uimage2D nextWorld;
 uniform int gridWidth;
 uniform int gridHeight;
 
-const uvec2 stableRange = uvec2(2, 3);
-const uvec2 birthRange = uvec2(3, 3);
+const int neighbourSearchRange = 5;
+// const int statesCount = 2; // alive, dead
+const bool countTheCenterCell = true;
+const uvec2 stableRange = uvec2(34, 58);
+const uvec2 birthRange = uvec2(34, 45);
+
+// TODO: Add more states. Add weights.
+// TODO: Try removing center cell check condition in countNeighbours method. 
 
 uint countNeighbours(ivec2 pos)
 {
     uint count = 0;
-    for (int y = -1; y <= 1; y++)
+    for (int y = -neighbourSearchRange; y <= neighbourSearchRange; y++)
     {
-        for (int x = -1; x <= 1; x++)
+        for (int x = -neighbourSearchRange; x <= neighbourSearchRange; x++)
         {
             if (x == 0 && y == 0) continue; // skip self
             ivec2 neighborPos = pos + ivec2(x, y);
@@ -33,6 +39,10 @@ void main() {
     uint cell = imageLoad(currentWorld, pos).r;
 
     uint neighbours = countNeighbours(pos);
+    if (countTheCenterCell)
+    {
+        neighbours += cell;
+    }
 
     uint nextCell = 0;
     if (neighbours >= birthRange.x && neighbours <= birthRange.y)
