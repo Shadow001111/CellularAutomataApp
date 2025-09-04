@@ -7,13 +7,21 @@
 
 struct SimulationSettings
 {
+	static const int MAX_NEIGHBOR_SEARCH_RANGE = 10;
+	static const int KERNEL_VALUE_RANGE = 1;
+
     int neighborSearchRange = 1;
-    bool countTheCenterCell = false;
-    int stableRange[2] = { 2, 3 };
-    int birthRange[2] = { 3, 3 };
+    float stableRange[2] = { 2, 3 };
+    float birthRange[2] = { 3, 3 };
+	std::vector<float> kernel;
+
+	int previousNeighborSearchRange = 1;
+
+    SimulationSettings();
 
     void submitToShader(Shader& shader) const;
-	int getMaxNeighborCount() const;
+	float getMaxNeighborSum() const;
+    void updateKernelSize();
 };
 
 class Simulation
@@ -33,6 +41,7 @@ class Simulation
 public:
     SimulationSettings settings;
     bool useTextureA = true;
+    GLuint kernelSSBO;
 
     Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB);
     void randomize();

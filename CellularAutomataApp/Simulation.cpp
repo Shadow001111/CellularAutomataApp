@@ -1,29 +1,64 @@
 #include "Simulation.h"
 #include <glad/glad.h>
 #include <math.h>
+#include <iostream>
 
 const int WORK_GROUP_W = 8;
 const int WORK_GROUP_H = 8;
 
 
+SimulationSettings::SimulationSettings()
+{
+    int maxDiameter = MAX_NEIGHBOR_SEARCH_RANGE * 2 + 1;
+    int maxTotalCells = maxDiameter * maxDiameter;
+    kernel.reserve(maxTotalCells);
+
+    int diameter = neighborSearchRange * 2 + 1;
+    int totalCells = diameter * diameter;
+	kernel.resize(totalCells, 1.0f);
+
+	kernel[neighborSearchRange + neighborSearchRange * diameter] = 0.0f; // Center cell should not contribute to the sum
+}
+
 void SimulationSettings::submitToShader(Shader& shader) const
 {
     shader.use();
     shader.setInt("neighborSearchRange", neighborSearchRange);
-    shader.setInt("countTheCenterCell", countTheCenterCell ? 1 : 0);
-    shader.setUvec2("stableRange", stableRange[0], stableRange[1]);
-    shader.setUvec2("birthRange", birthRange[0], birthRange[1]);
+    shader.setVec2("stableRange", stableRange[0], stableRange[1]);
+    shader.setVec2("birthRange", birthRange[0], birthRange[1]);
 }
 
-int SimulationSettings::getMaxNeighborCount() const
+float SimulationSettings::getMaxNeighborSum() const
 {
+	float maxSum = 0.0f;
+
 	int diameter = neighborSearchRange * 2 + 1;
-	int totalCells = diameter * diameter;
-    if (!countTheCenterCell)
+
+    for (int r = 0; r < diameter; ++r)
     {
-		totalCells -= 1;
+        for (int c = 0; c < diameter; ++c)
+        {
+            int index = r * diameter + c;
+			float value = kernel[index];
+            if (value > 0.0f)
+            {
+				maxSum += value;
+            }
+        }
+	}
+
+    return maxSum;
+}
+
+void SimulationSettings::updateKernelSize()
+{
+    if (neighborSearchRange != previousNeighborSearchRange)
+    {
+        int diameter = neighborSearchRange * 2 + 1;
+        int totalCells = diameter * diameter;
+		kernel.resize(totalCells, 1.0f);
     }
-    return totalCells;
+	previousNeighborSearchRange = neighborSearchRange;
 }
 
 Simulation::Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB)
@@ -39,6 +74,13 @@ Simulation::Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB)
 
     groupsX = ceilf((float)gridW / (float)WORK_GROUP_W);
     groupsY = ceilf((float)gridH / (float)WORK_GROUP_H);
+
+	glGenBuffers(1, &kernelSSBO);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, kernelSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, 441 * sizeof(float), nullptr, GL_DYNAMIC_DRAW); // 441 is number of cells with kernel radius 10
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, settings.kernel.size() * sizeof(float), settings.kernel.data());
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, kernelSSBO); // binding = 2
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 void Simulation::randomize()
@@ -81,4 +123,8 @@ void Simulation::update(int updates)
 void Simulation::updateSettingsInShader()
 {
 	settings.submitToShader(*computeShader);
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, kernelSSBO);
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, settings.kernel.size() * sizeof(float), settings.kernel.data());
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }

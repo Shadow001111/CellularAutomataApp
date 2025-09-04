@@ -97,46 +97,114 @@ void UI(Simulation& sim)
     ImGui::Begin("Settings");
 
     {
-        ImGui::Text("Simulation parameters:");
+        ImGui::Text("Simulation rules:");
 
-        ImGui::SliderInt("Neighbor Search Range", &settings.neighborSearchRange, 1, 10);
-        int maxNeighborCount = settings.getMaxNeighborCount();
+        ImGui::SliderInt("Neighbor search range", &settings.neighborSearchRange, 1, SimulationSettings::MAX_NEIGHBOR_SEARCH_RANGE);
+		settings.updateKernelSize();
+		float maxNeighborSum = settings.getMaxNeighborSum();
 
-        ImGui::Checkbox("Count the Center Cell", &settings.countTheCenterCell);
+		int stableRange[2] = { (int)settings.stableRange[0], (int)settings.stableRange[1] };
+        ImGui::SliderInt("Stable range", &stableRange[0], 0, (int)settings.stableRange[1]);
+		settings.stableRange[0] = (float)stableRange[0];
 
-        ImGui::SliderInt("Stable Range", &settings.stableRange[0], 0, settings.stableRange[1]);
-        ImGui::SliderInt("##0", &settings.stableRange[1], settings.stableRange[0], maxNeighborCount);
+		ImGui::SliderInt("##0", &stableRange[1], (int)settings.stableRange[0], (int)maxNeighborSum);
+		settings.stableRange[1] = (float)stableRange[1];
 
-        ImGui::SliderInt("Birth Range", &settings.birthRange[0], 0, settings.birthRange[1]);
-        ImGui::SliderInt("##1", &settings.birthRange[1], settings.birthRange[0], maxNeighborCount);
+        int birthRange[2] = { (int)settings.birthRange[0], (int)settings.birthRange[1] };
+        ImGui::SliderInt("Birth range", &birthRange[0], 0, (int)settings.birthRange[1]);
+		settings.birthRange[0] = (float)birthRange[0];
+
+		ImGui::SliderInt("##1", &birthRange[1], (int)settings.birthRange[0], (int)maxNeighborSum);
+		settings.birthRange[1] = (float)birthRange[1];
+    }
+
+    {
+        ImGui::Text("Kernel:");
+
+        int kernelSize = settings.neighborSearchRange * 2 + 1;
+
+        // Calculate cell size based on window size
+        const float maxDisplaySize = WINDOW_H * 0.5f;
+
+        ImVec2 avail = ImGui::GetContentRegionAvail();
+        if (avail.x > 0 && avail.y > 0)
+        {
+            avail.x = std::min(avail.x, maxDisplaySize);
+            avail.y = std::min(avail.y, maxDisplaySize);
+
+            float cellWidth = avail.x / kernelSize;
+            float cellHeight = avail.y / kernelSize;
+
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+            ImVec2 origin = ImGui::GetCursorScreenPos();
+
+            for (int r = 0; r < kernelSize; ++r)
+            {
+                for (int c = 0; c < kernelSize; ++c)
+                {
+                    float value = settings.kernel[r * kernelSize + c];
+
+                    ImVec4 col;
+                    if (value < 0.0f)
+                    {
+                        // Red for negative values
+                        float power = value / -SimulationSettings::KERNEL_VALUE_RANGE;
+                        col = ImVec4(1.0f, 1.0f - power, 1.0f - power, 1.0f);
+                    }
+                    else
+                    {
+                        // Green for positive values
+                        float power = value / SimulationSettings::KERNEL_VALUE_RANGE;
+                        col = ImVec4(1.0f - power, 1.0f, 1.0f - power, 1.0f);
+                    }
+
+                    ImVec2 p0(origin.x + c * cellWidth, origin.y + r * cellHeight);
+                    ImVec2 p1(p0.x + cellWidth, p0.y + cellHeight);
+
+                    drawList->AddRectFilled(p0, p1, ImColor(col));
+
+                    // Optional: draw the value text
+                    char buf[16];
+                    snprintf(buf, sizeof(buf), "%.1f", value);
+                    drawList->AddText(ImVec2(p0.x + 2, p0.y + 2), IM_COL32(0, 0, 0, 255), buf);
+                }
+            }
+
+            ImGui::Dummy(avail); // reserve space for the grid
+        }
     }
 
     {
         ImGui::Text("Buttons:");
 
-        if (ImGui::Button("Randomize"))
+        if (ImGui::Button("Randomize cells"))
         {
             sim.randomize();
         }
 
-        if (ImGui::Button("Reset to Default"))
+        if (ImGui::Button("Reset to default"))
         {
             settings = SimulationSettings();
             sim.updateSettingsInShader();
         }
 
         // Randomize rules
-        if (ImGui::Button("Randomize Rules"))
+        if (ImGui::Button("Randomize rules"))
         {
-            settings.neighborSearchRange = Random::Int(1, 8);
-            int maxNeighborCount = settings.getMaxNeighborCount();
+            settings.neighborSearchRange = Random::Int(1, SimulationSettings::MAX_NEIGHBOR_SEARCH_RANGE);
+            settings.updateKernelSize();
+			float maxNeighborSum = settings.getMaxNeighborSum();
 
-			settings.countTheCenterCell = Random::Int(0, 1) == 1;
+            settings.stableRange[0] = Random::Int(0, (int)maxNeighborSum);
+            settings.stableRange[1] = Random::Int(settings.stableRange[0], (int)maxNeighborSum);
+            settings.birthRange[0] = Random::Int(0, (int)maxNeighborSum);
+            settings.birthRange[1] = Random::Int(settings.birthRange[0], (int)maxNeighborSum);
 
-            settings.stableRange[0] = Random::Int(0, maxNeighborCount);
-            settings.stableRange[1] = Random::Int(settings.stableRange[0], maxNeighborCount);
-            settings.birthRange[0] = Random::Int(0, maxNeighborCount);
-			settings.birthRange[1] = Random::Int(settings.birthRange[0], maxNeighborCount);
+			int kernelSize = settings.neighborSearchRange * 2 + 1;
+            for (int i = 0; i < kernelSize * kernelSize; ++i)
+            {
+                settings.kernel[i] = Random::Float(-SimulationSettings::KERNEL_VALUE_RANGE, SimulationSettings::KERNEL_VALUE_RANGE);
+			}
 
             sim.randomize();
         }
@@ -147,6 +215,10 @@ void UI(Simulation& sim)
 	// Sumbit values to compute shader
     // TODO: update only when settings got changed
 	sim.updateSettingsInShader();
+
+	// TODO: Add ability to change SIMULATION_UPDATE_RATE from UI
+	// TODO: Add ability to pause simulation
+	// TODO: Add ability to save and load rules
 }
 
 

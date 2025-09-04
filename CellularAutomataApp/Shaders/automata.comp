@@ -10,49 +10,49 @@ uniform int gridHeight;
 
 uniform int neighborSearchRange;
 // const int statesCount = 2; // alive, dead
-uniform bool countTheCenterCell;
-uniform uvec2 stableRange;
-uniform uvec2 birthRange;
+uniform vec2 stableRange;
+uniform vec2 birthRange;
+
+layout(std430, binding = 2) buffer KernelBuffer
+{
+    float kernel[];
+};
 
 // CONWAY: 1; false; (2, 3); (3, 3)
 // BUGS: 1; true; (34, 58); (34, 45)
 
-// TODO: Add more states. Add weights.
-// TODO: Try removing center cell check condition in countNeighbors method. 
-
-uint countNeighbors(ivec2 pos)
+float getNeighborsSum(ivec2 pos)
 {
-    uint count = 0;
+    float sum = 0.0;
+    uint index = 0;
     for (int y = -neighborSearchRange; y <= neighborSearchRange; y++)
     {
         for (int x = -neighborSearchRange; x <= neighborSearchRange; x++)
         {
-            if (x == 0 && y == 0) continue; // skip self
             ivec2 neighborPos = pos + ivec2(x, y);
-            // Wrap around edges
             neighborPos = ivec2((neighborPos.x + gridWidth) % gridWidth, (neighborPos.y + gridHeight) % gridHeight);
-            count += imageLoad(currentWorld, neighborPos).r;
+
+            uint value = imageLoad(currentWorld, neighborPos).r;
+            sum += float(value) * kernel[index];
+            index++;
         }
     }
-    return count;
+    return sum;
 }
 
-void main() {
+void main()
+{   
     ivec2 pos = ivec2(gl_GlobalInvocationID.xy);
     uint cell = imageLoad(currentWorld, pos).r;
 
-    uint neighbors = countNeighbors(pos);
-    if (countTheCenterCell)
-    {
-        neighbors += cell;
-    }
+    float neighborsSum = getNeighborsSum(pos);
 
     uint nextCell = 0;
-    if (neighbors >= birthRange.x && neighbors <= birthRange.y)
+    if (neighborsSum >= birthRange.x && neighborsSum <= birthRange.y)
     {
         nextCell = 1;
     }
-    else if (neighbors >= stableRange.x && neighbors <= stableRange.y)
+    else if (neighborsSum >= stableRange.x && neighborsSum <= stableRange.y)
     {
         nextCell = cell;
     }
