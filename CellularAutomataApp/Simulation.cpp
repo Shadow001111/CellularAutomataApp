@@ -5,6 +5,27 @@
 const int WORK_GROUP_W = 8;
 const int WORK_GROUP_H = 8;
 
+
+void SimulationSettings::submitToShader(Shader& shader) const
+{
+    shader.use();
+    shader.setInt("neighborSearchRange", neighborSearchRange);
+    shader.setInt("countTheCenterCell", countTheCenterCell ? 1 : 0);
+    shader.setUvec2("stableRange", stableRange[0], stableRange[1]);
+    shader.setUvec2("birthRange", birthRange[0], birthRange[1]);
+}
+
+int SimulationSettings::getMaxNeighborCount() const
+{
+	int diameter = neighborSearchRange * 2 + 1;
+	int totalCells = diameter * diameter;
+    if (!countTheCenterCell)
+    {
+		totalCells -= 1;
+    }
+    return totalCells;
+}
+
 Simulation::Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB)
     : gridW(gridW), gridH(gridH), textureA(texA), textureB(texB), gen(rd()), dis(0, 1)
 {
@@ -20,7 +41,7 @@ Simulation::Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB)
     groupsY = ceilf((float)gridH / (float)WORK_GROUP_H);
 }
 
-void Simulation::randomize(bool useTextureA)
+void Simulation::randomize()
 {
     auto& currentTexture = useTextureA ? textureA : textureB;
     std::vector<uint8_t> data(gridW * gridH);
@@ -31,7 +52,7 @@ void Simulation::randomize(bool useTextureA)
     currentTexture.setData(data.data());
 }
 
-void Simulation::update(int updates, bool& useTextureA)
+void Simulation::update(int updates)
 {
     // Use compute shader for calculating next world state
     computeShader->use();
@@ -55,4 +76,9 @@ void Simulation::update(int updates, bool& useTextureA)
         // Switch textures
         useTextureA = !useTextureA;
     }
+}
+
+void Simulation::updateSettingsInShader()
+{
+	settings.submitToShader(*computeShader);
 }

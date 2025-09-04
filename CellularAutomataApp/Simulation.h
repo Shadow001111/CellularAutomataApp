@@ -5,6 +5,17 @@
 #include <vector>
 #include <memory>
 
+struct SimulationSettings
+{
+    int neighborSearchRange = 1;
+    bool countTheCenterCell = false;
+    int stableRange[2] = { 2, 3 };
+    int birthRange[2] = { 3, 3 };
+
+    void submitToShader(Shader& shader) const;
+	int getMaxNeighborCount() const;
+};
+
 class Simulation
 {
     int gridW = 0;
@@ -20,7 +31,11 @@ class Simulation
 
     std::unique_ptr<Shader> computeShader;
 public:
+    SimulationSettings settings;
+    bool useTextureA = true;
+
     Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB);
-    void randomize(bool useTextureA);
-    void update(int updates, bool& useTextureA);
+    void randomize();
+    void update(int updates);
+	void updateSettingsInShader();
 };
