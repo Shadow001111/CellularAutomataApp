@@ -5,6 +5,20 @@
 #include <vector>
 #include <memory>
 
+enum KernelRandomizationType : int
+{
+    AllValues,
+    OnlyPositives,
+    OnlyZerosAndOnes
+};
+
+static char* KERNEL_RANDOMIZATION_TYPE_NAMES[] =
+{
+    (char*)"All values",
+    (char*)"Only positives",
+    (char*)"Only 0 and 1"
+};
+
 struct SimulationRules
 {
 	static const int MAX_NEIGHBOR_SEARCH_RANGE = 10;
@@ -17,6 +31,8 @@ struct SimulationRules
 	std::vector<float> kernel;
 
 	int previousNeighborSearchRange = 1;
+
+	KernelRandomizationType kernelRandomizationType = KernelRandomizationType::AllValues;
 
     SimulationRules();
 

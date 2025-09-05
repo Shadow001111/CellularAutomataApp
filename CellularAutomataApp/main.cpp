@@ -99,6 +99,11 @@ void UI(Simulation& sim, Shader& cellsShader)
 	SimulationVisuals& visuals = sim.visuals;
 
     {
+        if (ImGui::ListBox("Kernel randomization type", (int*)&rules.kernelRandomizationType, KERNEL_RANDOMIZATION_TYPE_NAMES, IM_ARRAYSIZE(KERNEL_RANDOMIZATION_TYPE_NAMES), 3))
+        {
+            
+		}
+
         ImGui::Text("Buttons:");
 
         if (ImGui::Button("Randomize cells"))

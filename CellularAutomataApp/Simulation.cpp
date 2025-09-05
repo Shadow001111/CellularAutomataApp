@@ -64,30 +64,49 @@ void SimulationRules::updateKernelSize()
 
 void SimulationRules::randomizeKernel()
 {
-    const float leftBorder = 0.2f;
-    const float rightBorder = 0.8f;
-
-    for (int i = 0; i < kernel.size(); ++i)
+    if (kernelRandomizationType == KernelRandomizationType::AllValues)
     {
-        float value = Random::Float(0.0f, 1.0f);
+        const float leftBorder = 0.2f;
+        const float rightBorder = 0.8f;
 
-        if (value < leftBorder)
+        for (int i = 0; i < kernel.size(); ++i)
         {
-            // Scale to [SimulationRules::KERNEL_MIN_VALUE, 1]
-            value = SimulationRules::KERNEL_MIN_VALUE + value / leftBorder * (1.0f - SimulationRules::KERNEL_MIN_VALUE);
-        }
-        else if (value <= rightBorder)
-        {
-            value = 1.0f;
-        }
-        else
-        {
-            // Scale to [1, SimulationRules::KERNEL_MAX_VALUE]
-            value = 1.0f + (value - rightBorder) / (1.0f - rightBorder) * (SimulationRules::KERNEL_MAX_VALUE - 1.0f);
-        }
+            float value = Random::Float(0.0f, 1.0f);
 
-        kernel[i] = value;
+            if (value < leftBorder)
+            {
+                // Scale to [SimulationRules::KERNEL_MIN_VALUE, 1]
+                value = SimulationRules::KERNEL_MIN_VALUE + value / leftBorder * (1.0f - SimulationRules::KERNEL_MIN_VALUE);
+            }
+            else if (value <= rightBorder)
+            {
+                value = 1.0f;
+            }
+            else
+            {
+                // Scale to [1, SimulationRules::KERNEL_MAX_VALUE]
+                value = 1.0f + (value - rightBorder) / (1.0f - rightBorder) * (SimulationRules::KERNEL_MAX_VALUE - 1.0f);
+            }
+
+            kernel[i] = value;
+        }
     }
+    else if (kernelRandomizationType == KernelRandomizationType::OnlyPositives)
+    {
+        for (int i = 0; i < kernel.size(); ++i)
+        {
+            float value = Random::Float(1.0f, (float)SimulationRules::KERNEL_MAX_VALUE);
+            kernel[i] = value;
+        }
+    }
+    else if (kernelRandomizationType == KernelRandomizationType::OnlyZerosAndOnes)
+    {
+        for (int i = 0; i < kernel.size(); ++i)
+        {
+            float value = static_cast<float>(Random::Int(0, 1));
+            kernel[i] = value;
+        }
+	}
 }
 
 void SimulationVisuals::submitToShader(Shader& shader) const
