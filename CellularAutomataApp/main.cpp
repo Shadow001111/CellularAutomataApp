@@ -105,6 +105,8 @@ void UI(Simulation& sim)
         {
             sim.resetUpdatesCounter();
         }
+
+        ImGui::Checkbox("Is running", &sim.isRunning);
     }
 
     {
@@ -232,6 +234,7 @@ void UI(Simulation& sim)
 	// TODO: Add ability to save and load rules
 	// TODO: Add ability to choose kernel generation method (only positive ints, only 0 or 1, only positives, any)
 	// TODO: Add ability to change kernel size max and min values
+    // TODO; Add ability to use keyboard for changing settings
 }
 
 int main()

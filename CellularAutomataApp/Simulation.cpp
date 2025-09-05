@@ -96,6 +96,13 @@ void Simulation::randomize()
 
 int Simulation::update(double deltaTime)
 {
+    // Pause
+    if (!isRunning)
+    {
+        simulationUpdateCounter = 0.0;
+        return 0;
+    }
+
     // Determine updates to perform
     simulationUpdateCounter += deltaTime;
     int updatesToPerform = static_cast<int>(simulationUpdateCounter * settings.simulationUpdatesRate);

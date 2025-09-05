@@ -47,6 +47,7 @@ public:
     SimulationSettings settings;
     bool useTextureA = true;
     GLuint kernelSSBO;
+    bool isRunning = true;
 
     Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB);
     void randomize();
