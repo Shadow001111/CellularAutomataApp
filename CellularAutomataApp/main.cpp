@@ -95,6 +95,7 @@ void UI(Simulation& sim, Shader& cellsShader)
     ImGui::Begin("Cellular automata");
 
     SimulationRules& rules = sim.rules;
+	SimulationVisuals& visuals = sim.visuals;
 
     {
         ImGui::Text("Buttons:");
@@ -238,8 +239,59 @@ void UI(Simulation& sim, Shader& cellsShader)
 
     if (ImGui::BeginTabItem("Visuals"))
     {
-		ImGui::ColorPicker3("Alive color", sim.visuals.aliveColor);
-		ImGui::ColorPicker3("Dead color", sim.visuals.deadColor);
+		// TODO: Try use OkLab color space for better results
+        if (ImGui::Button("Generate monochromatic colors"))
+        {
+			float hue = Random::Float(0.0f, 1.0f);
+
+			float saturationAlive = Random::Float(0.5f, 1.0f);
+			float saturationDead = Random::Float(0.5f, 1.0f);
+
+			float brightnessAlive = Random::Float(0.75f, 1.0f);
+			float brightnessDead = Random::Float(0.25f, 0.5f);
+
+			float* aliveColor = visuals.aliveColor;
+			ImGui::ColorConvertHSVtoRGB(hue, saturationAlive, brightnessAlive, aliveColor[0], aliveColor[1], aliveColor[2]);
+
+			float* deadColor = visuals.deadColor;
+			ImGui::ColorConvertHSVtoRGB(hue, saturationDead, brightnessDead, deadColor[0], deadColor[1], deadColor[2]);
+        }
+
+        if (ImGui::Button("Generate analogous colors"))
+        {
+            float hue = Random::Float(0.0f, 1.0f);
+            float neighborHue = hue + 0.25f;
+
+            float saturationAlive = Random::Float(0.5f, 1.0f);
+            float saturationDead = Random::Float(0.5f, 1.0f);
+
+            float brightnessAlive = Random::Float(0.75f, 1.0f);
+            float brightnessDead = Random::Float(0.25f, 0.5f);
+
+            float* aliveColor = visuals.aliveColor;
+            ImGui::ColorConvertHSVtoRGB(hue, saturationAlive, brightnessAlive, aliveColor[0], aliveColor[1], aliveColor[2]);
+
+            float* deadColor = visuals.deadColor;
+            ImGui::ColorConvertHSVtoRGB(neighborHue, saturationDead, brightnessDead, deadColor[0], deadColor[1], deadColor[2]);
+        }
+
+        if (ImGui::Button("Generate complementary colors"))
+        {
+			float hue = Random::Float(0.0f, 1.0f);
+			float complementaryHue = hue + 0.5f;
+
+            float saturationAlive = Random::Float(0.5f, 1.0f);
+            float saturationDead = Random::Float(0.5f, 1.0f);
+
+            float brightnessAlive = Random::Float(0.75f, 1.0f);
+            float brightnessDead = Random::Float(0.25f, 0.5f);
+
+            float* aliveColor = visuals.aliveColor;
+            ImGui::ColorConvertHSVtoRGB(hue, saturationAlive, brightnessAlive, aliveColor[0], aliveColor[1], aliveColor[2]);
+
+            float* deadColor = visuals.deadColor;
+            ImGui::ColorConvertHSVtoRGB(complementaryHue, saturationDead, brightnessDead, deadColor[0], deadColor[1], deadColor[2]);
+        }
 
         ImGui::EndTabItem();
 	}
