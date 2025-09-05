@@ -10,8 +10,8 @@ uniform int gridHeight;
 
 uniform int neighborSearchRange;
 // const int statesCount = 2; // alive, dead
-uniform vec2 stableRange;
-uniform vec2 birthRange;
+uniform uvec2 stableRange;
+uniform uvec2 birthRange;
 
 layout(std430, binding = 2) buffer KernelBuffer
 {

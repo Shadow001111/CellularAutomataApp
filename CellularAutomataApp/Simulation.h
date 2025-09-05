@@ -37,8 +37,8 @@ struct SimulationRules
 	static const int KERNEL_MAX_VALUE = 2;
 
     int neighborSearchRange = 1;
-    float stableRange[2] = { 2, 3 };
-    float birthRange[2] = { 3, 3 };
+    int stableRange[2] = { 2, 3 };
+    int birthRange[2] = { 3, 3 };
 	std::vector<float> kernel;
 
 	int previousNeighborSearchRange = 1;

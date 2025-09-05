@@ -25,8 +25,8 @@ void SimulationRules::submitToShader(Shader& shader) const
 {
     shader.use();
     shader.setInt("neighborSearchRange", neighborSearchRange);
-    shader.setVec2("stableRange", stableRange[0], stableRange[1]);
-    shader.setVec2("birthRange", birthRange[0], birthRange[1]);
+    shader.setUvec2("stableRange", stableRange[0], stableRange[1]);
+    shader.setUvec2("birthRange", birthRange[0], birthRange[1]);
 }
 
 float SimulationRules::getMaxNeighborSum() const

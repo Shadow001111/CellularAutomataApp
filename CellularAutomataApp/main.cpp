@@ -106,14 +106,22 @@ void UI(Simulation& sim, Shader& cellsShader)
         {
             if (ImGui::MenuItem("Load"))
             {
-				std::wstring filename = WindowsFileDialog::OpenFileDialog(L"Rule files\0*.rules\0");
-				std::wcout << L"Selected file: " << filename << std::endl;
-                if (filename.size() > 0)
+				std::wstring filepath = WindowsFileDialog::OpenFileDialog();
+                if (filepath.size() > 0)
                 {
-                    std::ifstream file(filename);
+                    std::ifstream file(filepath);
                     if (file.is_open())
                     {
-                        //file >> rules;
+                        file.read(reinterpret_cast<char*>(&rules.neighborSearchRange), sizeof(rules.neighborSearchRange));
+                        file.read(reinterpret_cast<char*>(&rules.stableRange), sizeof(rules.stableRange));
+                        file.read(reinterpret_cast<char*>(&rules.birthRange), sizeof(rules.birthRange));
+
+                        int kernelSize = 0;
+                        file.read(reinterpret_cast<char*>(&kernelSize), sizeof(kernelSize));
+                        rules.kernel.resize(kernelSize);
+                        std::cout << kernelSize << std::endl;
+                        file.read(reinterpret_cast<char*>(rules.kernel.data()), rules.kernel.size() * sizeof(float));
+
                         file.close();
                     }
                 }
@@ -121,15 +129,25 @@ void UI(Simulation& sim, Shader& cellsShader)
 
             if (ImGui::MenuItem("Save", "Ctrl + S"))
             {
-                std::wstring filename = WindowsFileDialog::SaveFileDialog(L"Rule files\0*.rules\0");
-				std::wcout << L"Selected file: " << filename << std::endl;
-                if (filename.size() > 0)
+                std::wstring filepath = WindowsFileDialog::SaveFileDialog();
+                if (filepath.size() > 0)
                 {
-                    std::ofstream file(filename);
+                    std::ofstream file(filepath);
                     if (file.is_open())
                     {
-                        //file << rules;
+                        file.write(reinterpret_cast<const char*>(&rules.neighborSearchRange), sizeof(rules.neighborSearchRange));
+                        file.write(reinterpret_cast<const char*>(&rules.stableRange), sizeof(rules.stableRange));
+                        file.write(reinterpret_cast<const char*>(&rules.birthRange), sizeof(rules.birthRange));
+
+                        int kernelSize = rules.kernel.size();
+                        file.write(reinterpret_cast<const char*>(&kernelSize), sizeof(kernelSize));
+                        file.write(reinterpret_cast<const char*>(rules.kernel.data()), rules.kernel.size() * sizeof(float));
+
                         file.close();
+                    }
+                    else
+                    {
+                        std::wcerr << L"Failed to open file for writing: " << filepath << std::endl;
                     }
 				}
             }
@@ -208,19 +226,11 @@ void UI(Simulation& sim, Shader& cellsShader)
             rules.updateKernelSize();
             float maxNeighborSum = rules.getMaxNeighborSum();
 
-            int stableRange[2] = { (int)rules.stableRange[0], (int)rules.stableRange[1] };
-            ImGui::SliderInt("Stable range", &stableRange[0], 0, (int)rules.stableRange[1]);
-            rules.stableRange[0] = (float)stableRange[0];
+            ImGui::SliderInt("Stable range", &rules.stableRange[0], 0, rules.stableRange[1]);
+            ImGui::SliderInt("##S", &rules.stableRange[1], rules.stableRange[0], maxNeighborSum);
 
-            ImGui::SliderInt("##0", &stableRange[1], (int)rules.stableRange[0], (int)maxNeighborSum);
-            rules.stableRange[1] = (float)stableRange[1];
-
-            int birthRange[2] = { (int)rules.birthRange[0], (int)rules.birthRange[1] };
-            ImGui::SliderInt("Birth range", &birthRange[0], 0, (int)rules.birthRange[1]);
-            rules.birthRange[0] = (float)birthRange[0];
-
-            ImGui::SliderInt("##1", &birthRange[1], (int)rules.birthRange[0], (int)maxNeighborSum);
-            rules.birthRange[1] = (float)birthRange[1];
+            ImGui::SliderInt("Birth range", &rules.birthRange[0], 0, rules.birthRange[1]);
+            ImGui::SliderInt("##B", &rules.birthRange[1], rules.birthRange[0], maxNeighborSum);
         }
         ImGui::Dummy({ 0, 20 });
 
