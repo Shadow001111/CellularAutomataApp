@@ -2,6 +2,7 @@
 
 class ColorPalette
 {
+	static void generateHSVForCells(float& h, float& sALive, float& sDead, float& vAlive, float& vDead);
 public:
 	static void HSVtoRGB(float h, float s, float v, float& r, float& g, float& b);
 
