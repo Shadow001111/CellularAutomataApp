@@ -88,6 +88,9 @@ Simulation::Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB)
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, rules.kernel.size() * sizeof(float), rules.kernel.data());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, kernelSSBO); // binding = 2
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+    randomize();
+    submitRulesToShader();
 }
 
 void Simulation::randomize()

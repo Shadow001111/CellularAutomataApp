@@ -15,6 +15,7 @@
 
 #include "Simulation.h"
 #include "Random.h"
+#include "ColorPalette.h"
 
 const int WINDOW_W = 1824;
 const int WINDOW_H = 1024;
@@ -242,55 +243,26 @@ void UI(Simulation& sim, Shader& cellsShader)
 		// TODO: Try use OkLab color space for better results
         if (ImGui::Button("Generate monochromatic colors"))
         {
-			float hue = Random::Float(0.0f, 1.0f);
-
-			float saturationAlive = Random::Float(0.5f, 1.0f);
-			float saturationDead = Random::Float(0.5f, 1.0f);
-
-			float brightnessAlive = Random::Float(0.75f, 1.0f);
-			float brightnessDead = Random::Float(0.25f, 0.5f);
-
-			float* aliveColor = visuals.aliveColor;
-			ImGui::ColorConvertHSVtoRGB(hue, saturationAlive, brightnessAlive, aliveColor[0], aliveColor[1], aliveColor[2]);
-
-			float* deadColor = visuals.deadColor;
-			ImGui::ColorConvertHSVtoRGB(hue, saturationDead, brightnessDead, deadColor[0], deadColor[1], deadColor[2]);
+			ColorPalette::generateMonochromatic(visuals.aliveColor, visuals.deadColor);
+            sim.submitVisualsToShader(cellsShader);
         }
 
         if (ImGui::Button("Generate analogous colors"))
         {
-            float hue = Random::Float(0.0f, 1.0f);
-            float neighborHue = hue + 0.25f;
-
-            float saturationAlive = Random::Float(0.5f, 1.0f);
-            float saturationDead = Random::Float(0.5f, 1.0f);
-
-            float brightnessAlive = Random::Float(0.75f, 1.0f);
-            float brightnessDead = Random::Float(0.25f, 0.5f);
-
-            float* aliveColor = visuals.aliveColor;
-            ImGui::ColorConvertHSVtoRGB(hue, saturationAlive, brightnessAlive, aliveColor[0], aliveColor[1], aliveColor[2]);
-
-            float* deadColor = visuals.deadColor;
-            ImGui::ColorConvertHSVtoRGB(neighborHue, saturationDead, brightnessDead, deadColor[0], deadColor[1], deadColor[2]);
+			ColorPalette::generateAnalogous(visuals.aliveColor, visuals.deadColor);
+            sim.submitVisualsToShader(cellsShader);
         }
 
         if (ImGui::Button("Generate complementary colors"))
         {
-			float hue = Random::Float(0.0f, 1.0f);
-			float complementaryHue = hue + 0.5f;
+			ColorPalette::generateComplementary(visuals.aliveColor, visuals.deadColor);
+            sim.submitVisualsToShader(cellsShader);
+        }
 
-            float saturationAlive = Random::Float(0.5f, 1.0f);
-            float saturationDead = Random::Float(0.5f, 1.0f);
-
-            float brightnessAlive = Random::Float(0.75f, 1.0f);
-            float brightnessDead = Random::Float(0.25f, 0.5f);
-
-            float* aliveColor = visuals.aliveColor;
-            ImGui::ColorConvertHSVtoRGB(hue, saturationAlive, brightnessAlive, aliveColor[0], aliveColor[1], aliveColor[2]);
-
-            float* deadColor = visuals.deadColor;
-            ImGui::ColorConvertHSVtoRGB(complementaryHue, saturationDead, brightnessDead, deadColor[0], deadColor[1], deadColor[2]);
+        if (ImGui::Button("Generate random colors"))
+        {
+            ColorPalette::generateRandom(visuals.aliveColor, visuals.deadColor);
+			sim.submitVisualsToShader(cellsShader);
         }
 
         ImGui::EndTabItem();
@@ -303,7 +275,6 @@ void UI(Simulation& sim, Shader& cellsShader)
 	// Sumbit values to compute shader
     // TODO: update only when settings got changed
 	sim.submitRulesToShader();
-	sim.submitVisualsToShader(cellsShader);
 
 	// TODO: Add ability to save and load rules
 	// TODO: Add ability to choose kernel generation method (only positive ints, only 0 or 1, only positives, any)
@@ -352,8 +323,8 @@ int main()
 
     // Simulation class instance
 	Simulation simulation(GRID_W, GRID_H, textureA, textureB);
-	simulation.submitRulesToShader();
-    simulation.randomize();
+	ColorPalette::generateRandom(simulation.visuals.aliveColor, simulation.visuals.deadColor);
+	simulation.submitVisualsToShader(cellsRendererShader);
 
     double previousTime = glfwGetTime();
     double uiUpdateTime = previousTime;
