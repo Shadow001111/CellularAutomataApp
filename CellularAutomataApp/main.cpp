@@ -101,7 +101,8 @@ void UI(Simulation& sim, Shader& cellsShader)
     {
         if (ImGui::ListBox("Kernel randomization type", (int*)&rules.kernelRandomizationType, KERNEL_RANDOMIZATION_TYPE_NAMES, IM_ARRAYSIZE(KERNEL_RANDOMIZATION_TYPE_NAMES), 3))
         {
-            
+            rules.randomizeKernel();
+			sim.randomize();
 		}
 
         ImGui::Text("Buttons:");
