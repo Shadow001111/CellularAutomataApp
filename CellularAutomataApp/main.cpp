@@ -90,7 +90,7 @@ void createQuadBuffers(VAO& vao, VBO& vbo, EBO& ebo, const float* vertices, size
     vao.unbind();
 }
 
-void UI(Simulation& sim)
+void UI(Simulation& sim, Shader& cellsShader)
 {
     ImGui::Begin("Cellular automata");
 
@@ -108,7 +108,7 @@ void UI(Simulation& sim)
         if (ImGui::Button("Reset to default"))
         {
             rules = SimulationRules();
-            sim.updateSettingsInShader();
+            sim.submitRulesToShader();
         }
 
         // Randomize rules
@@ -142,9 +142,9 @@ void UI(Simulation& sim)
         {
             ImGui::Text("Simulation settings:");
 
-            int previousUpdatesRate = rules.simulationUpdatesRate;
-            ImGui::SliderInt("Updates rate", &rules.simulationUpdatesRate, 0, 300);
-            if (rules.simulationUpdatesRate != previousUpdatesRate)
+            int previousUpdatesRate = sim.simulationUpdatesRate;
+            ImGui::SliderInt("Updates rate", &sim.simulationUpdatesRate, 0, 300);
+            if (sim.simulationUpdatesRate != previousUpdatesRate)
             {
                 sim.resetUpdatesCounter();
             }
@@ -238,7 +238,9 @@ void UI(Simulation& sim)
 
     if (ImGui::BeginTabItem("Visuals"))
     {
-        ImGui::Text("Not implemented yet.");
+		ImGui::ColorPicker3("Alive color", sim.visuals.aliveColor);
+		ImGui::ColorPicker3("Dead color", sim.visuals.deadColor);
+
         ImGui::EndTabItem();
 	}
 	
@@ -248,14 +250,13 @@ void UI(Simulation& sim)
 
 	// Sumbit values to compute shader
     // TODO: update only when settings got changed
-	sim.updateSettingsInShader();
+	sim.submitRulesToShader();
+	sim.submitVisualsToShader(cellsShader);
 
 	// TODO: Add ability to save and load rules
 	// TODO: Add ability to choose kernel generation method (only positive ints, only 0 or 1, only positives, any)
 	// TODO: Add ability to change kernel size max and min values
     // TODO; Add ability to use keyboard for changing settings
-
-    // TODO: Add color pallete for UI and cells
 }
 
 int main()
@@ -271,11 +272,11 @@ int main()
     Texture2D textureB(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
 
     // Load shaders using Shader class
-    std::vector<Shader::ShaderSource> quadRendererShaderSources = {
-        { GL_VERTEX_SHADER,   "Shaders/texture.vert" },
-        { GL_FRAGMENT_SHADER, "Shaders/texture.frag" }
+    std::vector<Shader::ShaderSource> cellsRendererShaderSources = {
+        { GL_VERTEX_SHADER,   "Shaders/cells.vert" },
+        { GL_FRAGMENT_SHADER, "Shaders/cells.frag" }
     };
-    Shader quadRendererShader(quadRendererShaderSources);
+    Shader cellsRendererShader(cellsRendererShaderSources);
 
     // Fullscreen quad vertices and indices
 	float windowAspectRatio = static_cast<float>(WINDOW_W) / static_cast<float>(WINDOW_H);
@@ -299,7 +300,7 @@ int main()
 
     // Simulation class instance
 	Simulation simulation(GRID_W, GRID_H, textureA, textureB);
-	simulation.updateSettingsInShader();
+	simulation.submitRulesToShader();
     simulation.randomize();
 
     double previousTime = glfwGetTime();
@@ -362,7 +363,7 @@ int main()
             textureB.bind(GL_TEXTURE0);
         }
 
-        quadRendererShader.use();
+        cellsRendererShader.use();
 
         vao.bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -373,7 +374,7 @@ int main()
         ImGui::NewFrame();
 
         //
-        UI(simulation);
+        UI(simulation, cellsRendererShader);
 
         // imgui render
         ImGui::Render();

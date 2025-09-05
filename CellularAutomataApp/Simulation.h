@@ -18,13 +18,19 @@ struct SimulationRules
 
 	int previousNeighborSearchRange = 1;
 
-    int simulationUpdatesRate = 60;
-
     SimulationRules();
 
     void submitToShader(Shader& shader) const;
 	float getMaxNeighborSum() const;
     void updateKernelSize();
+};
+
+struct SimulationVisuals
+{
+	float aliveColor[3] = { 1.0f, 1.0f, 1.0f };
+	float deadColor[3] = { 0.0f, 0.0f, 0.0f };
+
+    void submitToShader(Shader& shader) const;
 };
 
 class Simulation
@@ -45,13 +51,16 @@ class Simulation
     double simulationUpdateCounter = 0.0;
 public:
     SimulationRules rules;
+	SimulationVisuals visuals;
     bool useTextureA = true;
     GLuint kernelSSBO;
     bool isRunning = true;
+    int simulationUpdatesRate = 60;
 
     Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB);
     void randomize();
     int update(double deltaTime);
-	void updateSettingsInShader();
+	void submitRulesToShader();
+	void submitVisualsToShader(Shader& shader);
     void resetUpdatesCounter();
 };

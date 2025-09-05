@@ -61,6 +61,13 @@ void SimulationRules::updateKernelSize()
 	previousNeighborSearchRange = neighborSearchRange;
 }
 
+void SimulationVisuals::submitToShader(Shader& shader) const
+{
+    shader.use();
+    shader.setVec3("aliveCellColor", aliveColor[0], aliveColor[1], aliveColor[2]);
+    shader.setVec3("deadCellColor", deadColor[0], deadColor[1], deadColor[2]);
+}
+
 Simulation::Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB)
     : gridW(gridW), gridH(gridH), textureA(texA), textureB(texB), gen(rd()), dis(0, 1)
 {
@@ -105,13 +112,13 @@ int Simulation::update(double deltaTime)
 
     // Determine updates to perform
     simulationUpdateCounter += deltaTime;
-    int updatesToPerform = static_cast<int>(simulationUpdateCounter * rules.simulationUpdatesRate);
+    int updatesToPerform = static_cast<int>(simulationUpdateCounter * simulationUpdatesRate);
     if (updatesToPerform <= 0)
     {
         return 0;
     }
 
-    simulationUpdateCounter -= (double)updatesToPerform / (double)rules.simulationUpdatesRate;
+    simulationUpdateCounter -= (double)updatesToPerform / (double)simulationUpdatesRate;
 
     // Use compute shader for calculating next world state
     computeShader->use();
@@ -138,13 +145,18 @@ int Simulation::update(double deltaTime)
     return updatesToPerform;
 }
 
-void Simulation::updateSettingsInShader()
+void Simulation::submitRulesToShader()
 {
 	rules.submitToShader(*computeShader);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, kernelSSBO);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, rules.kernel.size() * sizeof(float), rules.kernel.data());
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void Simulation::submitVisualsToShader(Shader& shader)
+{
+	visuals.submitToShader(shader);
 }
 
 void Simulation::resetUpdatesCounter()
