@@ -66,6 +66,9 @@
     <ClCompile Include="ColorPalette.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="WindowsFileDialog.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Shader.h">
@@ -117,6 +120,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="ColorPalette.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsFileDialog.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

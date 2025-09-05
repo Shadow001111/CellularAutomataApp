@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
@@ -16,6 +17,7 @@
 #include "Simulation.h"
 #include "Random.h"
 #include "ColorPalette.h"
+#include "WindowsFileDialog.h"
 
 const int WINDOW_W = 1824;
 const int WINDOW_H = 1024;
@@ -97,6 +99,44 @@ void UI(Simulation& sim, Shader& cellsShader)
 
     SimulationRules& rules = sim.rules;
 	SimulationVisuals& visuals = sim.visuals;
+
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("Load"))
+            {
+				std::wstring filename = WindowsFileDialog::OpenFileDialog(L"Rule files\0*.rules\0");
+				std::wcout << L"Selected file: " << filename << std::endl;
+                if (filename.size() > 0)
+                {
+                    std::ifstream file(filename);
+                    if (file.is_open())
+                    {
+                        //file >> rules;
+                        file.close();
+                    }
+                }
+            }
+
+            if (ImGui::MenuItem("Save", "Ctrl + S"))
+            {
+                std::wstring filename = WindowsFileDialog::SaveFileDialog(L"Rule files\0*.rules\0");
+				std::wcout << L"Selected file: " << filename << std::endl;
+                if (filename.size() > 0)
+                {
+                    std::ofstream file(filename);
+                    if (file.is_open())
+                    {
+                        //file << rules;
+                        file.close();
+                    }
+				}
+            }
+            ImGui::EndMenu();
+		}
+        ImGui::EndMainMenuBar();
+    }
 
     {
         if (ImGui::ListBox("Kernel randomization type", (int*)&rules.kernelRandomizationType, KERNEL_GENERATION_TYPE_NAMES, IM_ARRAYSIZE(KERNEL_GENERATION_TYPE_NAMES), (int)KernelGenerationType::COUNT_))

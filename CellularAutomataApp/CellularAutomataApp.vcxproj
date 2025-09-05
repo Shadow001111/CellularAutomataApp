@@ -164,6 +164,7 @@
     <ClCompile Include="Texture2D.cpp" />
     <ClCompile Include="VAO.cpp" />
     <ClCompile Include="VBO.cpp" />
+    <ClCompile Include="WindowsFileDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ColorPalette.h" />
@@ -183,6 +184,7 @@
     <ClInclude Include="Texture2D.h" />
     <ClInclude Include="VAO.h" />
     <ClInclude Include="VBO.h" />
+    <ClInclude Include="WindowsFileDialog.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
