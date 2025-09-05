@@ -240,56 +240,28 @@ void UI(Simulation& sim, Shader& cellsShader)
 
     if (ImGui::BeginTabItem("Visuals"))
     {
-		// TODO: Try use OkLab color space for better results
-        if (ImGui::Button("Generate monochromatic HSV"))
-        {
-			ColorPalette::generateMonochromaticHSV(visuals.aliveColor, visuals.deadColor);
-            sim.submitVisualsToShader(cellsShader);
-        }
-
-		ImGui::SameLine();
-        if (ImGui::Button("Generate analogous HSV"))
-        {
-			ColorPalette::generateAnalogousHSV(visuals.aliveColor, visuals.deadColor);
-            sim.submitVisualsToShader(cellsShader);
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button("Generate complementary HSV"))
-        {
-			ColorPalette::generateComplementaryHSV(visuals.aliveColor, visuals.deadColor);
-            sim.submitVisualsToShader(cellsShader);
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button("Generate random HSV"))
-        {
-            ColorPalette::generateRandomHSV(visuals.aliveColor, visuals.deadColor);
-			sim.submitVisualsToShader(cellsShader);
-        }
-
-        if (ImGui::Button("Generate monochromatic OKLab"))
+        if (ImGui::Button("Generate monochromatic colors"))
         {
             ColorPalette::generateMonochromaticOKLab(visuals.aliveColor, visuals.deadColor);
 			sim.submitVisualsToShader(cellsShader);
         }
 
         ImGui::SameLine();
-        if (ImGui::Button("Generate analogous OKLab"))
+        if (ImGui::Button("Generate analogous colors"))
         {
             ColorPalette::generateAnalogousOKLab(visuals.aliveColor, visuals.deadColor);
             sim.submitVisualsToShader(cellsShader);
         }
 
         ImGui::SameLine();
-        if (ImGui::Button("Generate complementary OKLab"))
+        if (ImGui::Button("Generate complementary colors"))
         {
             ColorPalette::generateComplementaryOKLab(visuals.aliveColor, visuals.deadColor);
             sim.submitVisualsToShader(cellsShader);
         }
 
 		ImGui::SameLine();
-        if (ImGui::Button("Generate random OKLab"))
+        if (ImGui::Button("Choose random"))
         {
             ColorPalette::generateRandomOKLab(visuals.aliveColor, visuals.deadColor);
             sim.submitVisualsToShader(cellsShader);
