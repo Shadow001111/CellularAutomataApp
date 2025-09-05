@@ -97,6 +97,17 @@ void UI(Simulation& sim)
     ImGui::Begin("Settings");
 
     {
+        ImGui::Text("Simulation settings:");
+
+        int previousUpdatesRate = settings.simulationUpdatesRate;
+        ImGui::SliderInt("Updates rate", &settings.simulationUpdatesRate, 0, 300);
+        if (settings.simulationUpdatesRate != previousUpdatesRate)
+        {
+            sim.resetUpdatesCounter();
+        }
+    }
+
+    {
         ImGui::Text("Simulation rules:");
 
         ImGui::SliderInt("Neighbor search range", &settings.neighborSearchRange, 1, SimulationSettings::MAX_NEIGHBOR_SEARCH_RANGE);
@@ -148,13 +159,13 @@ void UI(Simulation& sim)
                     if (value < 0.0f)
                     {
                         // Red for negative values
-                        float power = value / -SimulationSettings::KERNEL_VALUE_RANGE;
+                        float power = value / SimulationSettings::KERNEL_MIN_VALUE;
                         col = ImVec4(1.0f, 1.0f - power, 1.0f - power, 1.0f);
                     }
                     else
                     {
                         // Green for positive values
-                        float power = value / SimulationSettings::KERNEL_VALUE_RANGE;
+                        float power = value / SimulationSettings::KERNEL_MAX_VALUE;
                         col = ImVec4(1.0f - power, 1.0f, 1.0f - power, 1.0f);
                     }
 
@@ -182,6 +193,7 @@ void UI(Simulation& sim)
             sim.randomize();
         }
 
+        ImGui::SameLine();
         if (ImGui::Button("Reset to default"))
         {
             settings = SimulationSettings();
@@ -189,22 +201,23 @@ void UI(Simulation& sim)
         }
 
         // Randomize rules
+        ImGui::SameLine();
         if (ImGui::Button("Randomize rules"))
         {
             settings.neighborSearchRange = Random::Int(1, SimulationSettings::MAX_NEIGHBOR_SEARCH_RANGE);
+
             settings.updateKernelSize();
+            int kernelSize = settings.neighborSearchRange * 2 + 1;
+            for (int i = 0; i < kernelSize * kernelSize; ++i)
+            {
+                settings.kernel[i] = Random::Float(SimulationSettings::KERNEL_MIN_VALUE, SimulationSettings::KERNEL_MAX_VALUE);
+            }
 			float maxNeighborSum = settings.getMaxNeighborSum();
 
             settings.stableRange[0] = Random::Int(0, (int)maxNeighborSum);
             settings.stableRange[1] = Random::Int(settings.stableRange[0], (int)maxNeighborSum);
             settings.birthRange[0] = Random::Int(0, (int)maxNeighborSum);
             settings.birthRange[1] = Random::Int(settings.birthRange[0], (int)maxNeighborSum);
-
-			int kernelSize = settings.neighborSearchRange * 2 + 1;
-            for (int i = 0; i < kernelSize * kernelSize; ++i)
-            {
-                settings.kernel[i] = Random::Float(-SimulationSettings::KERNEL_VALUE_RANGE, SimulationSettings::KERNEL_VALUE_RANGE);
-			}
 
             sim.randomize();
         }
@@ -216,13 +229,10 @@ void UI(Simulation& sim)
     // TODO: update only when settings got changed
 	sim.updateSettingsInShader();
 
-	// TODO: Add ability to change SIMULATION_UPDATE_RATE from UI
-	// TODO: Add ability to pause simulation
 	// TODO: Add ability to save and load rules
+	// TODO: Add ability to choose kernel generation method (only positive ints, only 0 or 1, only positives, any)
+	// TODO: Add ability to change kernel size max and min values
 }
-
-
-const double SIMULATION_UPDATE_RATE = 50.0;
 
 int main()
 {
@@ -269,7 +279,6 @@ int main()
 	Simulation simulation(GRID_W, GRID_H, textureA, textureB);
 	simulation.updateSettingsInShader();
     simulation.randomize();
-    double simulationUpdateCounter = 0.0;
 
     double previousTime = glfwGetTime();
     double uiUpdateTime = previousTime;
@@ -316,18 +325,7 @@ int main()
         frameCount++;
 
         // Switch texture every 1/SIMULATION_UPDATE_RATE seconds
-		// Note: If SIMULATION_UPDATE_RATE is going to be dynamic, when increasing it, set textureSwitchCounter to 0.
-        {
-            simulationUpdateCounter += deltaTime;
-            int updatesToPerform = static_cast<int>(simulationUpdateCounter * SIMULATION_UPDATE_RATE);
-            if (updatesToPerform > 0)
-            {
-                simulation.update(updatesToPerform);
-                double updateInterval = 1.0 / SIMULATION_UPDATE_RATE;
-                simulationUpdateCounter -= updatesToPerform * updateInterval;
-                updatesCount += updatesToPerform;
-            }
-        }
+        updatesCount += simulation.update(deltaTime);
 
         // Clear screen
         glClearColor(0.5f, 0.5f, 0.5f, 1.0f);

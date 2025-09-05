@@ -8,7 +8,8 @@
 struct SimulationSettings
 {
 	static const int MAX_NEIGHBOR_SEARCH_RANGE = 10;
-	static const int KERNEL_VALUE_RANGE = 1;
+    static const int KERNEL_MIN_VALUE = -2;
+	static const int KERNEL_MAX_VALUE = 2;
 
     int neighborSearchRange = 1;
     float stableRange[2] = { 2, 3 };
@@ -16,6 +17,8 @@ struct SimulationSettings
 	std::vector<float> kernel;
 
 	int previousNeighborSearchRange = 1;
+
+    int simulationUpdatesRate = 60;
 
     SimulationSettings();
 
@@ -38,6 +41,8 @@ class Simulation
     std::uniform_int_distribution<> dis;
 
     std::unique_ptr<Shader> computeShader;
+
+    double simulationUpdateCounter = 0.0;
 public:
     SimulationSettings settings;
     bool useTextureA = true;
@@ -45,6 +50,7 @@ public:
 
     Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB);
     void randomize();
-    void update(int updates);
+    int update(double deltaTime);
 	void updateSettingsInShader();
+    void resetUpdatesCounter();
 };

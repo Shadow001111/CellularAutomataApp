@@ -94,15 +94,25 @@ void Simulation::randomize()
     currentTexture.setData(data.data());
 }
 
-void Simulation::update(int updates)
+int Simulation::update(double deltaTime)
 {
+    // Determine updates to perform
+    simulationUpdateCounter += deltaTime;
+    int updatesToPerform = static_cast<int>(simulationUpdateCounter * settings.simulationUpdatesRate);
+    if (updatesToPerform <= 0)
+    {
+        return 0;
+    }
+
+    simulationUpdateCounter -= (double)updatesToPerform / (double)settings.simulationUpdatesRate;
+
     // Use compute shader for calculating next world state
     computeShader->use();
 
     GLuint aID = textureA.getID();
     GLuint bID = textureB.getID();
 
-    for (int i = 0; i < updates; i++)
+    for (int i = 0; i < updatesToPerform; i++)
     {
 		GLuint currentID = useTextureA ? aID : bID;
 		GLuint nextID = useTextureA ? bID : aID;
@@ -118,6 +128,7 @@ void Simulation::update(int updates)
         // Switch textures
         useTextureA = !useTextureA;
     }
+    return updatesToPerform;
 }
 
 void Simulation::updateSettingsInShader()
@@ -127,4 +138,9 @@ void Simulation::updateSettingsInShader()
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, kernelSSBO);
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, settings.kernel.size() * sizeof(float), settings.kernel.data());
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void Simulation::resetUpdatesCounter()
+{
+    simulationUpdateCounter = 0.0;
 }

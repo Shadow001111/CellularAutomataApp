@@ -19,7 +19,7 @@ layout(std430, binding = 2) buffer KernelBuffer
 };
 
 // CONWAY: 1; false; (2, 3); (3, 3)
-// BUGS: 1; true; (34, 58); (34, 45)
+// BUGS: 5; true; (34, 58); (34, 45)
 
 float getNeighborsSum(ivec2 pos)
 {
