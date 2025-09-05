@@ -92,103 +92,9 @@ void createQuadBuffers(VAO& vao, VBO& vbo, EBO& ebo, const float* vertices, size
 
 void UI(Simulation& sim)
 {
-    SimulationSettings& settings = sim.settings;
+    ImGui::Begin("Cellular automata");
 
-    ImGui::Begin("Settings");
-
-    {
-        ImGui::Text("Simulation settings:");
-
-        int previousUpdatesRate = settings.simulationUpdatesRate;
-        ImGui::SliderInt("Updates rate", &settings.simulationUpdatesRate, 0, 300);
-        if (settings.simulationUpdatesRate != previousUpdatesRate)
-        {
-            sim.resetUpdatesCounter();
-        }
-
-        ImGui::Checkbox("Is running", &sim.isRunning);
-    }
-    ImGui::Dummy({0, 20});
-
-    {
-        ImGui::Text("Simulation rules:");
-
-        ImGui::SliderInt("Neighbor search range", &settings.neighborSearchRange, 1, SimulationSettings::MAX_NEIGHBOR_SEARCH_RANGE);
-		settings.updateKernelSize();
-		float maxNeighborSum = settings.getMaxNeighborSum();
-
-		int stableRange[2] = { (int)settings.stableRange[0], (int)settings.stableRange[1] };
-        ImGui::SliderInt("Stable range", &stableRange[0], 0, (int)settings.stableRange[1]);
-		settings.stableRange[0] = (float)stableRange[0];
-
-		ImGui::SliderInt("##0", &stableRange[1], (int)settings.stableRange[0], (int)maxNeighborSum);
-		settings.stableRange[1] = (float)stableRange[1];
-
-        int birthRange[2] = { (int)settings.birthRange[0], (int)settings.birthRange[1] };
-        ImGui::SliderInt("Birth range", &birthRange[0], 0, (int)settings.birthRange[1]);
-		settings.birthRange[0] = (float)birthRange[0];
-
-		ImGui::SliderInt("##1", &birthRange[1], (int)settings.birthRange[0], (int)maxNeighborSum);
-		settings.birthRange[1] = (float)birthRange[1];
-    }
-    ImGui::Dummy({ 0, 20 });
-
-    {
-        ImGui::Text("Kernel:");
-
-        int kernelSize = settings.neighborSearchRange * 2 + 1;
-
-        // Calculate cell size based on window size
-        const float maxDisplaySize = WINDOW_H * 0.5f;
-
-        ImVec2 avail = ImGui::GetContentRegionAvail();
-        if (avail.x > 0 && avail.y > 0)
-        {
-            avail.x = std::min(avail.x, maxDisplaySize);
-            avail.y = std::min(avail.y, maxDisplaySize);
-
-            float cellWidth = avail.x / kernelSize;
-            float cellHeight = avail.y / kernelSize;
-
-            ImDrawList* drawList = ImGui::GetWindowDrawList();
-            ImVec2 origin = ImGui::GetCursorScreenPos();
-
-            for (int r = 0; r < kernelSize; ++r)
-            {
-                for (int c = 0; c < kernelSize; ++c)
-                {
-                    float value = settings.kernel[r * kernelSize + c];
-
-                    ImVec4 col;
-                    if (value < 0.0f)
-                    {
-                        // Red for negative values
-                        float power = value / SimulationSettings::KERNEL_MIN_VALUE;
-                        col = ImVec4(1.0f, 1.0f - power, 1.0f - power, 1.0f);
-                    }
-                    else
-                    {
-                        // Green for positive values
-                        float power = value / SimulationSettings::KERNEL_MAX_VALUE;
-                        col = ImVec4(1.0f - power, 1.0f, 1.0f - power, 1.0f);
-                    }
-
-                    ImVec2 p0(origin.x + c * cellWidth, origin.y + r * cellHeight);
-                    ImVec2 p1(p0.x + cellWidth, p0.y + cellHeight);
-
-                    drawList->AddRectFilled(p0, p1, ImColor(col));
-
-                    // Optional: draw the value text
-                    char buf[16];
-                    snprintf(buf, sizeof(buf), "%.1f", value);
-                    drawList->AddText(ImVec2(p0.x + 2, p0.y + 2), IM_COL32(0, 0, 0, 255), buf);
-                }
-            }
-
-            ImGui::Dummy(avail); // reserve space for the grid
-        }
-    }
-    ImGui::Dummy({ 0, 20 });
+    SimulationRules& rules = sim.rules;
 
     {
         ImGui::Text("Buttons:");
@@ -201,7 +107,7 @@ void UI(Simulation& sim)
         ImGui::SameLine();
         if (ImGui::Button("Reset to default"))
         {
-            settings = SimulationSettings();
+            rules = SimulationRules();
             sim.updateSettingsInShader();
         }
 
@@ -209,25 +115,135 @@ void UI(Simulation& sim)
         ImGui::SameLine();
         if (ImGui::Button("Randomize rules"))
         {
-            settings.neighborSearchRange = Random::Int(1, SimulationSettings::MAX_NEIGHBOR_SEARCH_RANGE);
+            rules.neighborSearchRange = Random::Int(1, SimulationRules::MAX_NEIGHBOR_SEARCH_RANGE);
 
-            settings.updateKernelSize();
-            int kernelSize = settings.neighborSearchRange * 2 + 1;
+            rules.updateKernelSize();
+            int kernelSize = rules.neighborSearchRange * 2 + 1;
             for (int i = 0; i < kernelSize * kernelSize; ++i)
             {
-                settings.kernel[i] = Random::Float(SimulationSettings::KERNEL_MIN_VALUE, SimulationSettings::KERNEL_MAX_VALUE);
+                rules.kernel[i] = Random::Float(SimulationRules::KERNEL_MIN_VALUE, SimulationRules::KERNEL_MAX_VALUE);
             }
-			float maxNeighborSum = settings.getMaxNeighborSum();
+            float maxNeighborSum = rules.getMaxNeighborSum();
 
-            settings.stableRange[0] = Random::Int(0, (int)maxNeighborSum);
-            settings.stableRange[1] = Random::Int(settings.stableRange[0], (int)maxNeighborSum);
-            settings.birthRange[0] = Random::Int(0, (int)maxNeighborSum);
-            settings.birthRange[1] = Random::Int(settings.birthRange[0], (int)maxNeighborSum);
+            rules.stableRange[0] = Random::Int(0, (int)maxNeighborSum);
+            rules.stableRange[1] = Random::Int(rules.stableRange[0], (int)maxNeighborSum);
+            rules.birthRange[0] = Random::Int(0, (int)maxNeighborSum);
+            rules.birthRange[1] = Random::Int(rules.birthRange[0], (int)maxNeighborSum);
 
             sim.randomize();
         }
     }
+    ImGui::Dummy({ 0, 20 });
+
+    ImGui::BeginTabBar("Tabs");
+
+    if (ImGui::BeginTabItem("Settings"))
+    {
+        {
+            ImGui::Text("Simulation settings:");
+
+            int previousUpdatesRate = rules.simulationUpdatesRate;
+            ImGui::SliderInt("Updates rate", &rules.simulationUpdatesRate, 0, 300);
+            if (rules.simulationUpdatesRate != previousUpdatesRate)
+            {
+                sim.resetUpdatesCounter();
+            }
+
+            ImGui::Checkbox("Is running", &sim.isRunning);
+        }
+        ImGui::Dummy({ 0, 20 });
+
+        {
+            ImGui::Text("Simulation rules:");
+
+            ImGui::SliderInt("Neighbor search range", &rules.neighborSearchRange, 1, SimulationRules::MAX_NEIGHBOR_SEARCH_RANGE);
+            rules.updateKernelSize();
+            float maxNeighborSum = rules.getMaxNeighborSum();
+
+            int stableRange[2] = { (int)rules.stableRange[0], (int)rules.stableRange[1] };
+            ImGui::SliderInt("Stable range", &stableRange[0], 0, (int)rules.stableRange[1]);
+            rules.stableRange[0] = (float)stableRange[0];
+
+            ImGui::SliderInt("##0", &stableRange[1], (int)rules.stableRange[0], (int)maxNeighborSum);
+            rules.stableRange[1] = (float)stableRange[1];
+
+            int birthRange[2] = { (int)rules.birthRange[0], (int)rules.birthRange[1] };
+            ImGui::SliderInt("Birth range", &birthRange[0], 0, (int)rules.birthRange[1]);
+            rules.birthRange[0] = (float)birthRange[0];
+
+            ImGui::SliderInt("##1", &birthRange[1], (int)rules.birthRange[0], (int)maxNeighborSum);
+            rules.birthRange[1] = (float)birthRange[1];
+        }
+        ImGui::Dummy({ 0, 20 });
+
+        {
+            ImGui::Text("Kernel:");
+
+            int kernelSize = rules.neighborSearchRange * 2 + 1;
+
+            // Calculate cell size based on window size
+            const float maxDisplaySize = WINDOW_H * 0.5f;
+
+            ImVec2 avail = ImGui::GetContentRegionAvail();
+            if (avail.x > 0 && avail.y > 0)
+            {
+                avail.x = std::min(avail.x, maxDisplaySize);
+                avail.y = std::min(avail.y, maxDisplaySize);
+
+                float cellWidth = avail.x / kernelSize;
+                float cellHeight = avail.y / kernelSize;
+
+                ImDrawList* drawList = ImGui::GetWindowDrawList();
+                ImVec2 origin = ImGui::GetCursorScreenPos();
+
+                for (int r = 0; r < kernelSize; ++r)
+                {
+                    for (int c = 0; c < kernelSize; ++c)
+                    {
+                        float value = rules.kernel[r * kernelSize + c];
+
+                        ImVec4 col;
+                        if (value < 0.0f)
+                        {
+                            // Red for negative values
+                            float power = value / SimulationRules::KERNEL_MIN_VALUE;
+                            col = ImVec4(1.0f, 1.0f - power, 1.0f - power, 1.0f);
+                        }
+                        else
+                        {
+                            // Green for positive values
+                            float power = value / SimulationRules::KERNEL_MAX_VALUE;
+                            col = ImVec4(1.0f - power, 1.0f, 1.0f - power, 1.0f);
+                        }
+
+                        ImVec2 p0(origin.x + c * cellWidth, origin.y + r * cellHeight);
+                        ImVec2 p1(p0.x + cellWidth, p0.y + cellHeight);
+
+                        drawList->AddRectFilled(p0, p1, ImColor(col));
+
+                        // Optional: draw the value text
+                        char buf[16];
+                        snprintf(buf, sizeof(buf), "%.1f", value);
+                        drawList->AddText(ImVec2(p0.x + 2, p0.y + 2), IM_COL32(0, 0, 0, 255), buf);
+                    }
+                }
+
+                ImGui::Dummy(avail); // reserve space for the grid
+            }
+        }
+        ImGui::Dummy({ 0, 20 });
+
+        ImGui::EndTabItem();
+    }
+
+    if (ImGui::BeginTabItem("Visuals"))
+    {
+        ImGui::Text("Not implemented yet.");
+        ImGui::EndTabItem();
+	}
 	
+    ImGui::EndTabBar();
+
 	ImGui::End();
 
 	// Sumbit values to compute shader

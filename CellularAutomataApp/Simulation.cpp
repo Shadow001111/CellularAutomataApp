@@ -7,7 +7,7 @@ const int WORK_GROUP_W = 8;
 const int WORK_GROUP_H = 8;
 
 
-SimulationSettings::SimulationSettings()
+SimulationRules::SimulationRules()
 {
     int maxDiameter = MAX_NEIGHBOR_SEARCH_RANGE * 2 + 1;
     int maxTotalCells = maxDiameter * maxDiameter;
@@ -20,7 +20,7 @@ SimulationSettings::SimulationSettings()
 	kernel[neighborSearchRange + neighborSearchRange * diameter] = 0.0f; // Center cell should not contribute to the sum
 }
 
-void SimulationSettings::submitToShader(Shader& shader) const
+void SimulationRules::submitToShader(Shader& shader) const
 {
     shader.use();
     shader.setInt("neighborSearchRange", neighborSearchRange);
@@ -28,7 +28,7 @@ void SimulationSettings::submitToShader(Shader& shader) const
     shader.setVec2("birthRange", birthRange[0], birthRange[1]);
 }
 
-float SimulationSettings::getMaxNeighborSum() const
+float SimulationRules::getMaxNeighborSum() const
 {
 	float maxSum = 0.0f;
 
@@ -50,7 +50,7 @@ float SimulationSettings::getMaxNeighborSum() const
     return maxSum;
 }
 
-void SimulationSettings::updateKernelSize()
+void SimulationRules::updateKernelSize()
 {
     if (neighborSearchRange != previousNeighborSearchRange)
     {
@@ -78,7 +78,7 @@ Simulation::Simulation(int gridW, int gridH, Texture2D& texA, Texture2D& texB)
 	glGenBuffers(1, &kernelSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, kernelSSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, 441 * sizeof(float), nullptr, GL_DYNAMIC_DRAW); // 441 is number of cells with kernel radius 10
-	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, settings.kernel.size() * sizeof(float), settings.kernel.data());
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, rules.kernel.size() * sizeof(float), rules.kernel.data());
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, kernelSSBO); // binding = 2
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
@@ -105,13 +105,13 @@ int Simulation::update(double deltaTime)
 
     // Determine updates to perform
     simulationUpdateCounter += deltaTime;
-    int updatesToPerform = static_cast<int>(simulationUpdateCounter * settings.simulationUpdatesRate);
+    int updatesToPerform = static_cast<int>(simulationUpdateCounter * rules.simulationUpdatesRate);
     if (updatesToPerform <= 0)
     {
         return 0;
     }
 
-    simulationUpdateCounter -= (double)updatesToPerform / (double)settings.simulationUpdatesRate;
+    simulationUpdateCounter -= (double)updatesToPerform / (double)rules.simulationUpdatesRate;
 
     // Use compute shader for calculating next world state
     computeShader->use();
@@ -140,10 +140,10 @@ int Simulation::update(double deltaTime)
 
 void Simulation::updateSettingsInShader()
 {
-	settings.submitToShader(*computeShader);
+	rules.submitToShader(*computeShader);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, kernelSSBO);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, settings.kernel.size() * sizeof(float), settings.kernel.data());
+    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, rules.kernel.size() * sizeof(float), rules.kernel.data());
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 

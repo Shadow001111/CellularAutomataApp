@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 
-struct SimulationSettings
+struct SimulationRules
 {
 	static const int MAX_NEIGHBOR_SEARCH_RANGE = 10;
     static const int KERNEL_MIN_VALUE = -2;
@@ -20,7 +20,7 @@ struct SimulationSettings
 
     int simulationUpdatesRate = 60;
 
-    SimulationSettings();
+    SimulationRules();
 
     void submitToShader(Shader& shader) const;
 	float getMaxNeighborSum() const;
@@ -44,7 +44,7 @@ class Simulation
 
     double simulationUpdateCounter = 0.0;
 public:
-    SimulationSettings settings;
+    SimulationRules rules;
     bool useTextureA = true;
     GLuint kernelSSBO;
     bool isRunning = true;
