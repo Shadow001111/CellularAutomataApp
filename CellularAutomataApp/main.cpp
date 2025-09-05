@@ -108,6 +108,7 @@ void UI(Simulation& sim)
 
         ImGui::Checkbox("Is running", &sim.isRunning);
     }
+    ImGui::Dummy({0, 20});
 
     {
         ImGui::Text("Simulation rules:");
@@ -130,6 +131,7 @@ void UI(Simulation& sim)
 		ImGui::SliderInt("##1", &birthRange[1], (int)settings.birthRange[0], (int)maxNeighborSum);
 		settings.birthRange[1] = (float)birthRange[1];
     }
+    ImGui::Dummy({ 0, 20 });
 
     {
         ImGui::Text("Kernel:");
@@ -186,6 +188,7 @@ void UI(Simulation& sim)
             ImGui::Dummy(avail); // reserve space for the grid
         }
     }
+    ImGui::Dummy({ 0, 20 });
 
     {
         ImGui::Text("Buttons:");
@@ -235,6 +238,8 @@ void UI(Simulation& sim)
 	// TODO: Add ability to choose kernel generation method (only positive ints, only 0 or 1, only positives, any)
 	// TODO: Add ability to change kernel size max and min values
     // TODO; Add ability to use keyboard for changing settings
+
+    // TODO: Add color pallete for UI and cells
 }
 
 int main()
@@ -246,8 +251,6 @@ int main()
 	glfwSwapInterval(1); // Enable vsync
 
     // Create two 2D textures
-	// TODO: Try using Texture2DArray to not bind different textures every frame
-	// TODO: Or try to use uniform index to switch between textures in the shader
     Texture2D textureA(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
     Texture2D textureB(GRID_W, GRID_H, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
 
