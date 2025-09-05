@@ -99,7 +99,7 @@ void UI(Simulation& sim, Shader& cellsShader)
 	SimulationVisuals& visuals = sim.visuals;
 
     {
-        if (ImGui::ListBox("Kernel randomization type", (int*)&rules.kernelRandomizationType, KERNEL_RANDOMIZATION_TYPE_NAMES, IM_ARRAYSIZE(KERNEL_RANDOMIZATION_TYPE_NAMES), 3))
+        if (ImGui::ListBox("Kernel randomization type", (int*)&rules.kernelRandomizationType, KERNEL_GENERATION_TYPE_NAMES, IM_ARRAYSIZE(KERNEL_GENERATION_TYPE_NAMES), (int)KernelGenerationType::COUNT_))
         {
             rules.randomizeKernel();
 			sim.randomize();

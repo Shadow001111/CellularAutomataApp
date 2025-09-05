@@ -5,18 +5,29 @@
 #include <vector>
 #include <memory>
 
-enum KernelRandomizationType : int
+enum KernelGenerationType : int
 {
-    AllValues,
-    OnlyPositives,
-    OnlyZerosAndOnes
+    RandomAllValues = 0,
+    RandomOnlyPositives,
+    RandomOnlyZerosAndOnes,
+    VonNeumann,
+    FilledCircle,
+    FilledCircleWithNegatives,
+    Checkerboard,
+    CheckerboardWithNegatives,
+	COUNT_ // Not an actual type, just a count of types
 };
 
-static char* KERNEL_RANDOMIZATION_TYPE_NAMES[] =
+static char* KERNEL_GENERATION_TYPE_NAMES[] =
 {
-    (char*)"All values",
-    (char*)"Only positives",
-    (char*)"Only 0 and 1"
+    (char*)"Random - All values",
+    (char*)"Random - Only positives",
+    (char*)"Random - Only 0 and 1",
+	(char*)"Von Neumann",
+	(char*)"Filled Circle",
+	(char*)"Filled Circle with negatives",
+	(char*)"Checkerboard",
+	(char*)"Checkerboard with negatives"
 };
 
 struct SimulationRules
@@ -32,7 +43,7 @@ struct SimulationRules
 
 	int previousNeighborSearchRange = 1;
 
-	KernelRandomizationType kernelRandomizationType = KernelRandomizationType::AllValues;
+	KernelGenerationType kernelRandomizationType = KernelGenerationType::RandomAllValues;
 
     SimulationRules();
 

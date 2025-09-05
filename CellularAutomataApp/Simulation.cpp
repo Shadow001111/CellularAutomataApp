@@ -64,7 +64,7 @@ void SimulationRules::updateKernelSize()
 
 void SimulationRules::randomizeKernel()
 {
-    if (kernelRandomizationType == KernelRandomizationType::AllValues)
+    if (kernelRandomizationType == KernelGenerationType::RandomAllValues)
     {
         const float leftBorder = 0.2f;
         const float rightBorder = 0.8f;
@@ -91,7 +91,7 @@ void SimulationRules::randomizeKernel()
             kernel[i] = value;
         }
     }
-    else if (kernelRandomizationType == KernelRandomizationType::OnlyPositives)
+    else if (kernelRandomizationType == KernelGenerationType::RandomOnlyPositives)
     {
         for (int i = 0; i < kernel.size(); ++i)
         {
@@ -99,7 +99,7 @@ void SimulationRules::randomizeKernel()
             kernel[i] = value;
         }
     }
-    else if (kernelRandomizationType == KernelRandomizationType::OnlyZerosAndOnes)
+    else if (kernelRandomizationType == KernelGenerationType::RandomOnlyZerosAndOnes)
     {
         for (int i = 0; i < kernel.size(); ++i)
         {
@@ -107,6 +107,114 @@ void SimulationRules::randomizeKernel()
             kernel[i] = value;
         }
 	}
+    else if (kernelRandomizationType == KernelGenerationType::VonNeumann)
+    {
+        int diameter = neighborSearchRange * 2 + 1;
+        int center = neighborSearchRange;
+        for (int x = 0; x < diameter; ++x)
+        {
+            for (int y = 0; y < diameter; ++y)
+            {
+                int index = x * diameter + y;
+                if (abs(x - center) + abs(y - center) <= neighborSearchRange)
+                {
+                    kernel[index] = 1.0f;
+                }
+                else
+                {
+                    kernel[index] = 0.0f;
+                }
+            }
+        }
+	}
+    else if (kernelRandomizationType == KernelGenerationType::FilledCircle)
+    {
+        int diameter = neighborSearchRange * 2 + 1;
+        int center = neighborSearchRange;
+        float radius = neighborSearchRange;
+        float radiusSquared = radius * radius;
+        for (int x = 0; x < diameter; ++x)
+        {
+            for (int y = 0; y < diameter; ++y)
+            {
+                int index = x * diameter + y;
+                float dx = static_cast<float>(x - center);
+                float dy = static_cast<float>(y - center);
+                float distanceSquared = dx * dx + dy * dy;
+                if (distanceSquared <= radiusSquared)
+                {
+                    kernel[index] = neighborSearchRange - sqrtf(distanceSquared);
+                }
+                else
+                {
+                    kernel[index] = 0.0f;
+                }
+            }
+		}
+	}
+    else if (kernelRandomizationType == KernelGenerationType::FilledCircleWithNegatives)
+    {
+        int diameter = neighborSearchRange * 2 + 1;
+        int center = neighborSearchRange;
+        float radius = neighborSearchRange;
+        float radiusSquared = radius * radius;
+        for (int x = 0; x < diameter; ++x)
+        {
+            for (int y = 0; y < diameter; ++y)
+            {
+                int index = x * diameter + y;
+                float dx = static_cast<float>(x - center);
+                float dy = static_cast<float>(y - center);
+                float distanceSquared = dx * dx + dy * dy;
+                if (distanceSquared <= radiusSquared)
+                {
+                    kernel[index] = neighborSearchRange - sqrtf(distanceSquared);
+                }
+                else
+                {
+                    kernel[index] = neighborSearchRange - sqrtf(distanceSquared);
+                }
+            }
+        }
+	}
+    else if (kernelRandomizationType == KernelGenerationType::Checkerboard)
+    {
+        int diameter = neighborSearchRange * 2 + 1;
+        for (int x = 0; x < diameter; ++x)
+        {
+            for (int y = 0; y < diameter; ++y)
+            {
+                int index = x * diameter + y;
+                if ((x + y) % 2 == 0)
+                {
+                    kernel[index] = 1.0f;
+                }
+                else
+                {
+                    kernel[index] = 0.0f;
+                }
+            }
+        }
+	}
+    else if (kernelRandomizationType == KernelGenerationType::CheckerboardWithNegatives)
+    {
+        int diameter = neighborSearchRange * 2 + 1;
+        for (int x = 0; x < diameter; ++x)
+        {
+            for (int y = 0; y < diameter; ++y)
+            {
+                int index = x * diameter + y;
+                if ((x + y) % 2 == 0)
+                {
+                    kernel[index] = 1.0f;
+                }
+                else
+                {
+                    kernel[index] = -1.0f;
+                }
+            }
+        }
+        }
 }
 
 void SimulationVisuals::submitToShader(Shader& shader) const
