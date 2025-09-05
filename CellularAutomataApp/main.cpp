@@ -111,20 +111,20 @@ void UI(Simulation& sim, Shader& cellsShader)
         {
             rules = SimulationRules();
             sim.submitRulesToShader();
+            sim.randomize();
         }
 
         // Randomize rules
         ImGui::SameLine();
         if (ImGui::Button("Randomize rules"))
         {
+            // TODO: Use shapes to randomize kernel
             rules.neighborSearchRange = Random::Int(1, SimulationRules::MAX_NEIGHBOR_SEARCH_RANGE);
 
             rules.updateKernelSize();
             int kernelSize = rules.neighborSearchRange * 2 + 1;
-            for (int i = 0; i < kernelSize * kernelSize; ++i)
-            {
-                rules.kernel[i] = Random::Float(SimulationRules::KERNEL_MIN_VALUE, SimulationRules::KERNEL_MAX_VALUE);
-            }
+
+			rules.randomizeKernel();
             float maxNeighborSum = rules.getMaxNeighborSum();
 
             rules.stableRange[0] = Random::Int(0, (int)maxNeighborSum);

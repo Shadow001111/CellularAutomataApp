@@ -8,8 +8,8 @@
 struct SimulationRules
 {
 	static const int MAX_NEIGHBOR_SEARCH_RANGE = 10;
-    static const int KERNEL_MIN_VALUE = -2;
-	static const int KERNEL_MAX_VALUE = 2;
+    static const int KERNEL_MIN_VALUE = -5;
+	static const int KERNEL_MAX_VALUE = 5;
 
     int neighborSearchRange = 1;
     float stableRange[2] = { 2, 3 };
@@ -23,6 +23,7 @@ struct SimulationRules
     void submitToShader(Shader& shader) const;
 	float getMaxNeighborSum() const;
     void updateKernelSize();
+	void randomizeKernel();
 };
 
 struct SimulationVisuals

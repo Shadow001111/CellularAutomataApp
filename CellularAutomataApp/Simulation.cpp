@@ -2,6 +2,7 @@
 #include <glad/glad.h>
 #include <math.h>
 #include <iostream>
+#include "Random.h"
 
 const int WORK_GROUP_W = 8;
 const int WORK_GROUP_H = 8;
@@ -59,6 +60,34 @@ void SimulationRules::updateKernelSize()
 		kernel.resize(totalCells, 1.0f);
     }
 	previousNeighborSearchRange = neighborSearchRange;
+}
+
+void SimulationRules::randomizeKernel()
+{
+    const float leftBorder = 0.2f;
+    const float rightBorder = 0.8f;
+
+    for (int i = 0; i < kernel.size(); ++i)
+    {
+        float value = Random::Float(0.0f, 1.0f);
+
+        if (value < leftBorder)
+        {
+            // Scale to [SimulationRules::KERNEL_MIN_VALUE, 1]
+            value = SimulationRules::KERNEL_MIN_VALUE + value / leftBorder * (1.0f - SimulationRules::KERNEL_MIN_VALUE);
+        }
+        else if (value <= rightBorder)
+        {
+            value = 1.0f;
+        }
+        else
+        {
+            // Scale to [1, SimulationRules::KERNEL_MAX_VALUE]
+            value = 1.0f + (value - rightBorder) / (1.0f - rightBorder) * (SimulationRules::KERNEL_MAX_VALUE - 1.0f);
+        }
+
+        kernel[i] = value;
+    }
 }
 
 void SimulationVisuals::submitToShader(Shader& shader) const
