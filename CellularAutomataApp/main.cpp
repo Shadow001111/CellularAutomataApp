@@ -241,28 +241,58 @@ void UI(Simulation& sim, Shader& cellsShader)
     if (ImGui::BeginTabItem("Visuals"))
     {
 		// TODO: Try use OkLab color space for better results
-        if (ImGui::Button("Generate monochromatic colors"))
+        if (ImGui::Button("Generate monochromatic HSV"))
         {
-			ColorPalette::generateMonochromatic(visuals.aliveColor, visuals.deadColor);
+			ColorPalette::generateMonochromaticHSV(visuals.aliveColor, visuals.deadColor);
             sim.submitVisualsToShader(cellsShader);
         }
 
-        if (ImGui::Button("Generate analogous colors"))
+		ImGui::SameLine();
+        if (ImGui::Button("Generate analogous HSV"))
         {
-			ColorPalette::generateAnalogous(visuals.aliveColor, visuals.deadColor);
+			ColorPalette::generateAnalogousHSV(visuals.aliveColor, visuals.deadColor);
             sim.submitVisualsToShader(cellsShader);
         }
 
-        if (ImGui::Button("Generate complementary colors"))
+        ImGui::SameLine();
+        if (ImGui::Button("Generate complementary HSV"))
         {
-			ColorPalette::generateComplementary(visuals.aliveColor, visuals.deadColor);
+			ColorPalette::generateComplementaryHSV(visuals.aliveColor, visuals.deadColor);
             sim.submitVisualsToShader(cellsShader);
         }
 
-        if (ImGui::Button("Generate random colors"))
+        ImGui::SameLine();
+        if (ImGui::Button("Generate random HSV"))
         {
-            ColorPalette::generateRandom(visuals.aliveColor, visuals.deadColor);
+            ColorPalette::generateRandomHSV(visuals.aliveColor, visuals.deadColor);
 			sim.submitVisualsToShader(cellsShader);
+        }
+
+        if (ImGui::Button("Generate monochromatic OKLab"))
+        {
+            ColorPalette::generateMonochromaticOKLab(visuals.aliveColor, visuals.deadColor);
+			sim.submitVisualsToShader(cellsShader);
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Generate analogous OKLab"))
+        {
+            ColorPalette::generateAnalogousOKLab(visuals.aliveColor, visuals.deadColor);
+            sim.submitVisualsToShader(cellsShader);
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Generate complementary OKLab"))
+        {
+            ColorPalette::generateComplementaryOKLab(visuals.aliveColor, visuals.deadColor);
+            sim.submitVisualsToShader(cellsShader);
+        }
+
+		ImGui::SameLine();
+        if (ImGui::Button("Generate random OKLab"))
+        {
+            ColorPalette::generateRandomOKLab(visuals.aliveColor, visuals.deadColor);
+            sim.submitVisualsToShader(cellsShader);
         }
 
         ImGui::EndTabItem();
@@ -323,7 +353,7 @@ int main()
 
     // Simulation class instance
 	Simulation simulation(GRID_W, GRID_H, textureA, textureB);
-	ColorPalette::generateRandom(simulation.visuals.aliveColor, simulation.visuals.deadColor);
+	ColorPalette::generateRandomHSV(simulation.visuals.aliveColor, simulation.visuals.deadColor);
 	simulation.submitVisualsToShader(cellsRendererShader);
 
     double previousTime = glfwGetTime();
